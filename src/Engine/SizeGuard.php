@@ -28,6 +28,52 @@ class SizeGuard {
 	}
 
 	/**
+	 * Protect an optimized file from negative savings.
+	 *
+	 * @param string      $file_path Path to file on disk.
+	 * @param int         $original_bytes Size of original before compression.
+	 * @param string|null $backup_path Optional backup path to restore from if larger.
+	 * @return bool True if kept (smaller), false if rejected (larger or equal).
+	 */
+	public static function protect_file( string $file_path, int $original_bytes, ?string $backup_path = null ): bool {
+		if ( ! file_exists( $file_path ) ) {
+			return false;
+		}
+
+		$current_size = (int) filesize( $file_path );
+		if ( ! self::is_smaller( $original_bytes, $current_size ) ) {
+			if ( $backup_path && file_exists( $backup_path ) ) {
+				@copy( $backup_path, $file_path );
+			}
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Protect NextGen companion files (WebP/AVIF).
+	 * If the NextGen file is larger than or equal to the compressed source, delete it.
+	 *
+	 * @param string $nextgen_path Path to generated .webp or .avif.
+	 * @param int    $source_bytes Size of the source image.
+	 * @return bool True if kept (smaller), false if deleted (larger or equal).
+	 */
+	public static function protect_nextgen( string $nextgen_path, int $source_bytes ): bool {
+		if ( ! file_exists( $nextgen_path ) ) {
+			return false;
+		}
+
+		$nextgen_size = (int) filesize( $nextgen_path );
+		if ( ! self::is_smaller( $source_bytes, $nextgen_size ) ) {
+			@unlink( $nextgen_path );
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Calculate percentage saved.
 	 *
 	 * @param int $original_bytes Size before.
