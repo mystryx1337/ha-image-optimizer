@@ -247,6 +247,31 @@ namespace {
 		}
 	}
 
+	if ( ! function_exists( 'is_serialized' ) ) {
+		function is_serialized( $data, $strict = true ): bool {
+			if ( ! is_string( $data ) ) {
+				return false;
+			}
+			$data = trim( $data );
+			if ( 'N;' === $data ) {
+				return true;
+			}
+			if ( strlen( $data ) < 4 || ':' !== $data[1] ) {
+				return false;
+			}
+			return true;
+		}
+	}
+
+	if ( ! function_exists( 'maybe_unserialize' ) ) {
+		function maybe_unserialize( $original ) {
+			if ( is_serialized( $original ) ) {
+				return @unserialize( $original );
+			}
+			return $original;
+		}
+	}
+
 	if ( ! function_exists( 'check_ajax_referer' ) ) {
 		function check_ajax_referer( $action = -1, $query_arg = false, $die = true ): int {
 			return 1;
