@@ -212,17 +212,34 @@ $last_scan   = ! empty( $audit_data['last_scan'] ) ? date_i18n( 'd.m.Y H:i', (in
 							</td>
 							<td>
 								<?php if ( ! empty( $item['references'] ) && is_array( $item['references'] ) ) : ?>
-									<ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #1a7f37;">
+									<ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #1a7f37; line-height: 1.6;">
 										<?php foreach ( $item['references'] as $ref ) : ?>
-											<li><?php echo esc_html( $ref ); ?></li>
+											<?php
+											$ref_label = is_array( $ref ) ? ( $ref['label'] ?? '' ) : (string) $ref;
+											$ref_url   = is_array( $ref ) ? ( $ref['url'] ?? '' ) : '';
+											?>
+											<li>
+												<?php if ( ! empty( $ref_url ) ) : ?>
+													<a href="<?php echo esc_url( $ref_url ); ?>" target="_blank" style="color: #0969da; text-decoration: underline; font-weight: 500;">
+														<?php echo esc_html( $ref_label ); ?> ↗
+													</a>
+												<?php else : ?>
+													<?php echo esc_html( $ref_label ); ?>
+												<?php endif; ?>
+											</li>
 										<?php endforeach; ?>
 									</ul>
 								<?php elseif ( ! empty( $item['parent_title'] ) ) : ?>
-									<span style="font-size: 12px; color: #9a6700;">
+									<span style="font-size: 12px; color: #9a6700; line-height: 1.5; display: inline-block;">
 										<?php
+										$p_url = ! empty( $item['parent_url'] ) ? $item['parent_url'] : admin_url( 'post.php?post=' . (int) $item['parent_id'] . '&action=edit' );
 										printf(
-											/* translators: 1: parent post title, 2: parent post ID */
-											esc_html__( 'Zugeordnet zu: "%1$s" (#%2$d), aber im Text oder Beitragsbild nicht auffindbar.', 'ha-image-optimizer' ),
+											/* translators: 1: edit URL, 2: parent post title, 3: parent post ID */
+											wp_kses(
+												__( 'Zugeordnet zu: <a href="%1$s" target="_blank" style="color: #0969da; text-decoration: underline; font-weight: 500;">"%2$s" (#%3$d) ↗</a>, aber im Text oder Beitragsbild nicht auffindbar.', 'ha-image-optimizer' ),
+												[ 'a' => [ 'href' => [], 'target' => [], 'style' => [] ] ]
+											),
+											esc_url( $p_url ),
 											esc_html( $item['parent_title'] ),
 											(int) $item['parent_id']
 										);

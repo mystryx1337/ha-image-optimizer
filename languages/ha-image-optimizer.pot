@@ -259,8 +259,8 @@ msgid "Unoptimierte Bilder jetzt verarbeiten"
 msgstr "Unoptimierte Bilder jetzt verarbeiten"
 
 #: templates/bulk-optimizer-page.php
-msgid "Alle Bilder erneut optimieren (Force All)"
-msgstr "Alle Bilder erneut optimieren (Force All)"
+msgid "Alle Bilder erneut optimieren (Erzwingen)"
+msgstr "Alle Bilder erneut optimieren (Erzwingen)"
 
 #: templates/bulk-optimizer-page.php
 msgid "Aktivitäts-Protokoll"

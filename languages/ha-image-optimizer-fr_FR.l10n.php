@@ -77,7 +77,7 @@ return [
         'Gesparter Speicherplatz' => 'Espace disque économisé',
         'Massenverarbeitung starten' => 'Démarrer le traitement en masse',
         'Unoptimierte Bilder jetzt verarbeiten' => 'Traiter les images non optimisées maintenant',
-        'Alle Bilder erneut optimieren (Force All)' => 'Réoptimiser toutes les images',
+        'Alle Bilder erneut optimieren (Erzwingen)' => 'Réoptimiser toutes les images',
         'Aktivitäts-Protokoll' => 'Journal d\'activité',
         'Dieses Bild wurde noch nicht optimiert.' => 'Cette image n\'a pas encore été optimisée.',
         'Jetzt optimieren' => 'Optimiser maintenant',

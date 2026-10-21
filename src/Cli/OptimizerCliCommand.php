@@ -358,12 +358,22 @@ class OptimizerCliCommand {
 
 		$table_data = [];
 		foreach ( $filtered as $f ) {
+			$ref_text = 'Keine';
+			if ( ! empty( $f['references'] ) ) {
+				$labels = array_map( function ( $r ) {
+					return is_array( $r ) ? ( $r['label'] ?? '' ) : (string) $r;
+				}, $f['references'] );
+				$ref_text = implode( '; ', array_filter( $labels ) );
+			} elseif ( ! empty( $f['parent_title'] ) ) {
+				$ref_text = 'Zugeordnet zu: ' . $f['parent_title'];
+			}
+
 			$table_data[] = [
 				'ID'         => $f['id'],
 				'Datei'      => $f['filename'],
 				'Speicher'   => $f['disk_human'],
 				'Status'     => $f['status'],
-				'Referenzen' => ! empty( $f['references'] ) ? implode( '; ', $f['references'] ) : ( $f['parent_title'] ? 'Zugeordnet zu: ' . $f['parent_title'] : 'Keine' ),
+				'Referenzen' => $ref_text,
 			];
 		}
 

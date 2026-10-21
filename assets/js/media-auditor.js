@@ -164,13 +164,20 @@
 
 			let refHtml = '';
 			if (item.references && item.references.length) {
-				refHtml = '<ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #1a7f37;">';
+				refHtml = '<ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #1a7f37; line-height: 1.6;">';
 				item.references.forEach(function (ref) {
-					refHtml += '<li>' + escapeHtml(ref) + '</li>';
+					const label = (typeof ref === 'object' && ref !== null && ref.label) ? ref.label : ref;
+					const url = (typeof ref === 'object' && ref !== null && ref.url) ? ref.url : null;
+					if (url) {
+						refHtml += '<li><a href="' + escapeHtml(url) + '" target="_blank" style="color: #0969da; text-decoration: underline; font-weight: 500;">' + escapeHtml(label) + ' ↗</a></li>';
+					} else {
+						refHtml += '<li>' + escapeHtml(label) + '</li>';
+					}
 				});
 				refHtml += '</ul>';
 			} else if (item.parent_title) {
-				refHtml = '<span style="font-size: 12px; color: #9a6700;">Zugeordnet zu: "' + escapeHtml(item.parent_title) + '" (#' + item.parent_id + '), aber im Text oder Beitragsbild nicht auffindbar.</span>';
+				const parentUrl = item.parent_url || ('post.php?post=' + item.parent_id + '&action=edit');
+				refHtml = '<span style="font-size: 12px; color: #9a6700; line-height: 1.5; display: inline-block;">Zugeordnet zu: <a href="' + escapeHtml(parentUrl) + '" target="_blank" style="color: #0969da; text-decoration: underline; font-weight: 500;">"' + escapeHtml(item.parent_title) + '" (#' + item.parent_id + ') ↗</a>, aber im Text oder Beitragsbild nicht auffindbar.</span>';
 			} else {
 				refHtml = '<span style="font-size: 12px; color: #cf222e;"><em>Keine Verwendung oder Zuordnung gefunden. Kann sicher bereinigt werden.</em></span>';
 			}

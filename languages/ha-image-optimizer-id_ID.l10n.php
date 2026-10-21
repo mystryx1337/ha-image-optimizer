@@ -77,7 +77,7 @@ return [
         'Gesparter Speicherplatz' => 'Disk Space Saved',
         'Massenverarbeitung starten' => 'Start Bulk Processing',
         'Unoptimierte Bilder jetzt verarbeiten' => 'Process unoptimized images now',
-        'Alle Bilder erneut optimieren (Force All)' => 'Re-optimize all images (Force All)',
+        'Alle Bilder erneut optimieren (Erzwingen)' => 'Re-optimize all images (Force All)',
         'Aktivitäts-Protokoll' => 'Activity Log',
         'Dieses Bild wurde noch nicht optimiert.' => 'This image has not been optimized yet.',
         'Jetzt optimieren' => 'Optimize Now',

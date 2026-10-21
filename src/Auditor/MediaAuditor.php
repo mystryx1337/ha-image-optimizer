@@ -32,6 +32,13 @@ class MediaAuditor {
 	public const STATUS_UNATTACHED_UNUSED = 'unattached_unused';
 
 	/**
+	 * In-memory cache for active theme file contents.
+	 *
+	 * @var array<string, string>|null
+	 */
+	private static ?array $theme_files_cache = null;
+
+	/**
 	 * Get list of all eligible media attachment IDs to audit.
 	 *
 	 * @return array<int>
@@ -84,8 +91,14 @@ class MediaAuditor {
 			$thumb_url = wp_get_attachment_url( $attachment_id );
 		}
 
-		$disk_bytes  = self::calculate_disk_bytes( $attachment_id, $file );
-		$references  = [];
+		$disk_bytes = self::calculate_disk_bytes( $attachment_id, $file );
+		$references = [];
+
+		$upload_dir = wp_upload_dir();
+		$rel_file   = '';
+		if ( $file && ! empty( $upload_dir['basedir'] ) ) {
+			$rel_file = ltrim( str_replace( wp_normalize_path( $upload_dir['basedir'] ), '', wp_normalize_path( $file ) ), '/' );
+		}
 
 		// -------------------------------------------------------------
 		// 1. Featured Image (_thumbnail_id)
@@ -103,14 +116,18 @@ class MediaAuditor {
 
 		if ( ! empty( $featured_posts ) ) {
 			foreach ( $featured_posts as $fp ) {
-				$title = ! empty( $fp->post_title ) ? $fp->post_title : ( 'ID ' . ( $fp->ID ?? 0 ) );
-				$references[] = sprintf(
-					/* translators: 1: post title, 2: post ID, 3: post type */
-					__( 'Beitragsbild in "%1$s" (#%2$d, %3$s)', 'ha-image-optimizer' ),
-					$title,
-					(int) ( $fp->ID ?? 0 ),
-					$fp->post_type ?? 'post'
-				);
+				$title   = ! empty( $fp->post_title ) ? $fp->post_title : ( 'ID ' . ( $fp->ID ?? 0 ) );
+				$post_id = (int) ( $fp->ID ?? 0 );
+				$references[] = [
+					'label' => sprintf(
+						/* translators: 1: post title, 2: post ID, 3: post type */
+						__( 'Beitragsbild in "%1$s" (#%2$d, %3$s)', 'ha-image-optimizer' ),
+						$title,
+						$post_id,
+						$fp->post_type ?? 'post'
+					),
+					'url'   => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
+				];
 			}
 		}
 
@@ -139,32 +156,72 @@ class MediaAuditor {
 
 		if ( ! empty( $gallery_posts ) ) {
 			foreach ( $gallery_posts as $gp ) {
-				$title = ! empty( $gp->post_title ) ? $gp->post_title : ( 'ID ' . ( $gp->ID ?? 0 ) );
-				$references[] = sprintf(
-					/* translators: 1: product title, 2: product ID */
-					__( 'WooCommerce Produktgalerie in "%1$s" (#%2$d)', 'ha-image-optimizer' ),
-					$title,
-					(int) ( $gp->ID ?? 0 )
-				);
+				$title   = ! empty( $gp->post_title ) ? $gp->post_title : ( 'ID ' . ( $gp->ID ?? 0 ) );
+				$post_id = (int) ( $gp->ID ?? 0 );
+				$references[] = [
+					'label' => sprintf(
+						/* translators: 1: product title, 2: product ID */
+						__( 'WooCommerce Produktgalerie in "%1$s" (#%2$d)', 'ha-image-optimizer' ),
+						$title,
+						$post_id
+					),
+					'url'   => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
+				];
 			}
 		}
 
 		// -------------------------------------------------------------
-		// 3. Site Identity & Options (Icon, Logo)
+		// 3. Site Identity & Theme Options (Icon, Logo, Header, Background)
 		// -------------------------------------------------------------
 		$site_icon = (int) get_option( 'site_icon', 0 );
 		if ( $site_icon === $attachment_id ) {
-			$references[] = __( 'Website-Icon (Browser Favicon)', 'ha-image-optimizer' );
+			$references[] = [
+				'label' => __( 'Website-Icon (Browser Favicon)', 'ha-image-optimizer' ),
+				'url'   => admin_url( 'customize.php?autofocus[section]=title_tagline' ),
+			];
 		}
 
 		$custom_logo = (int) get_theme_mod( 'custom_logo', 0 );
 		if ( $custom_logo === $attachment_id ) {
-			$references[] = __( 'Offizielles Website-Logo (Theme Header)', 'ha-image-optimizer' );
+			$references[] = [
+				'label' => __( 'Offizielles Website-Logo (Theme Header)', 'ha-image-optimizer' ),
+				'url'   => admin_url( 'customize.php?autofocus[control]=custom_logo' ),
+			];
 		}
 
 		$site_logo = (int) get_option( 'site_logo', 0 );
 		if ( $site_logo === $attachment_id && $custom_logo !== $attachment_id ) {
-			$references[] = __( 'Website-Logo (FSE Block Theme)', 'ha-image-optimizer' );
+			$references[] = [
+				'label' => __( 'Website-Logo (FSE Block Theme)', 'ha-image-optimizer' ),
+				'url'   => admin_url( 'site-editor.php' ),
+			];
+		}
+
+		// Header Image
+		$header_img_url  = (string) get_theme_mod( 'header_image', '' );
+		$header_img_data = get_theme_mod( 'header_image_data' );
+		$is_header_match = false;
+		if ( is_object( $header_img_data ) && isset( $header_img_data->attachment_id ) && (int) $header_img_data->attachment_id === $attachment_id ) {
+			$is_header_match = true;
+		} elseif ( is_array( $header_img_data ) && isset( $header_img_data['attachment_id'] ) && (int) $header_img_data['attachment_id'] === $attachment_id ) {
+			$is_header_match = true;
+		} elseif ( ! empty( $rel_file ) && str_contains( $header_img_url, $rel_file ) ) {
+			$is_header_match = true;
+		}
+		if ( $is_header_match ) {
+			$references[] = [
+				'label' => __( 'Theme Header-Bild (Customizer)', 'ha-image-optimizer' ),
+				'url'   => admin_url( 'customize.php?autofocus[control]=header_image' ),
+			];
+		}
+
+		// Background Image
+		$bg_image_url = (string) get_theme_mod( 'background_image', '' );
+		if ( ! empty( $rel_file ) && str_contains( $bg_image_url, $rel_file ) ) {
+			$references[] = [
+				'label' => __( 'Theme Hintergrundbild (Customizer)', 'ha-image-optimizer' ),
+				'url'   => admin_url( 'customize.php?autofocus[control]=background_image' ),
+			];
 		}
 
 		// -------------------------------------------------------------
@@ -184,39 +241,44 @@ class MediaAuditor {
 
 			if ( ! empty( $term_rows ) ) {
 				foreach ( $term_rows as $tr ) {
-					$references[] = sprintf(
-						/* translators: 1: category name, 2: taxonomy name */
-						__( 'Kategorie-Vorschaubild in "%1$s" (%2$s)', 'ha-image-optimizer' ),
-						$tr->name ?? 'Kategorie',
-						$tr->taxonomy ?? 'category'
-					);
+					$tax     = $tr->taxonomy ?? 'category';
+					$term_id = (int) ( $tr->term_id ?? 0 );
+					$references[] = [
+						'label' => sprintf(
+							/* translators: 1: category name, 2: taxonomy name */
+							__( 'Kategorie-Vorschaubild in "%1$s" (%2$s)', 'ha-image-optimizer' ),
+							$tr->name ?? 'Kategorie',
+							$tax
+						),
+						'url'   => admin_url( 'term.php?taxonomy=' . $tax . '&tag_ID=' . $term_id ),
+					];
 				}
 			}
 		}
 
 		// -------------------------------------------------------------
-		// 5. Content References (Gutenberg blocks, HTML <img>, URLs)
+		// 5. Content References (Gutenberg blocks, HTML <img>, URLs, Shortcodes)
 		// -------------------------------------------------------------
-		$upload_dir = wp_upload_dir();
-		$rel_file   = '';
-		if ( $file && ! empty( $upload_dir['basedir'] ) ) {
-			$rel_file = ltrim( str_replace( wp_normalize_path( $upload_dir['basedir'] ), '', wp_normalize_path( $file ) ), '/' );
-		}
-
 		$content_patterns = [
 			'wp-image-' . $attachment_id,
 			'"id":' . $attachment_id,
 			'"id": ' . $attachment_id,
+			'image="' . $attachment_id . '"',
+			'images="' . $attachment_id . '"',
 		];
 
 		if ( ! empty( $rel_file ) ) {
 			$content_patterns[] = $rel_file;
 		}
 
+		if ( strlen( $filename ) >= 6 ) {
+			$content_patterns[] = $filename;
+		}
+
 		// Build safe LIKE clauses for content searching
 		$like_clauses = [];
 		$like_params  = [];
-		foreach ( $content_patterns as $pattern ) {
+		foreach ( array_unique( $content_patterns ) as $pattern ) {
 			$like_clauses[] = 'p.post_content LIKE %s';
 			$like_params[]  = '%' . $wpdb->esc_like( $pattern ) . '%';
 		}
@@ -234,51 +296,155 @@ class MediaAuditor {
 		$content_posts = $wpdb->get_results( $content_sql );
 		if ( ! empty( $content_posts ) ) {
 			foreach ( $content_posts as $cp ) {
-				$title = ! empty( $cp->post_title ) ? $cp->post_title : ( 'ID ' . ( $cp->ID ?? 0 ) );
-				$references[] = sprintf(
-					/* translators: 1: post title, 2: post ID, 3: post type */
-					__( 'Eingebunden im Inhalt von "%1$s" (#%2$d, %3$s)', 'ha-image-optimizer' ),
-					$title,
-					(int) ( $cp->ID ?? 0 ),
-					$cp->post_type ?? 'post'
-				);
+				$title   = ! empty( $cp->post_title ) ? $cp->post_title : ( 'ID ' . ( $cp->ID ?? 0 ) );
+				$post_id = (int) ( $cp->ID ?? 0 );
+				$p_type  = $cp->post_type ?? 'post';
+
+				$type_label = $p_type;
+				if ( 'wp_template' === $p_type || 'wp_template_part' === $p_type ) {
+					$type_label = 'Theme-Template (FSE)';
+				}
+
+				$references[] = [
+					'label' => sprintf(
+						/* translators: 1: post title, 2: post ID, 3: post type */
+						__( 'Eingebunden im Inhalt von "%1$s" (#%2$d, %3$s)', 'ha-image-optimizer' ),
+						$title,
+						$post_id,
+						$type_label
+					),
+					'url'   => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
+				];
 			}
 		}
 
 		// -------------------------------------------------------------
-		// 6. Page Builder Postmeta (e.g. Elementor _elementor_data)
+		// 6. Page Builder Postmeta (Elementor, Beaver Builder, Bricks, Oxygen)
 		// -------------------------------------------------------------
-		$builder_sql = $wpdb->prepare(
-			"SELECT p.ID, p.post_title, p.post_type FROM {$wpdb->postmeta} pm
-			INNER JOIN {$wpdb->posts} p ON (pm.post_id = p.ID)
-			WHERE pm.meta_key = '_elementor_data'
-			AND (
-				pm.meta_value LIKE %s
-				OR pm.meta_value LIKE %s
-			)
-			AND p.post_status != 'trash'
-			LIMIT 3",
+		$builder_like_clauses = [
+			'pm.meta_value LIKE %s',
+			'pm.meta_value LIKE %s',
+			'pm.meta_value LIKE %s',
+		];
+		$builder_like_params = [
 			'%"id":' . $attachment_id . '%',
-			'%"id":"' . $attachment_id . '"%'
+			'%"id": ' . $attachment_id . '%',
+			'%"id":"' . $attachment_id . '"%',
+		];
+
+		if ( ! empty( $rel_file ) ) {
+			$builder_like_clauses[] = 'pm.meta_value LIKE %s';
+			$builder_like_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
+		}
+
+		$where_builder = implode( ' OR ', $builder_like_clauses );
+		$builder_sql   = $wpdb->prepare(
+			"SELECT p.ID, p.post_title, p.post_type, pm.meta_key FROM {$wpdb->postmeta} pm
+			INNER JOIN {$wpdb->posts} p ON (pm.post_id = p.ID)
+			WHERE pm.meta_key IN ('_elementor_data', '_elementor_css', '_fl_builder_data', '_bricks_page_content_2', 'ct_builder_json')
+			AND ({$where_builder})
+			AND p.post_status != 'trash'
+			LIMIT 5",
+			...$builder_like_params
 		);
 		$builder_posts = $wpdb->get_results( $builder_sql );
 
 		if ( ! empty( $builder_posts ) ) {
 			foreach ( $builder_posts as $bp ) {
-				$title = ! empty( $bp->post_title ) ? $bp->post_title : ( 'ID ' . ( $bp->ID ?? 0 ) );
-				$references[] = sprintf(
-					/* translators: 1: post title, 2: post ID */
-					__( 'Elementor Layout in "%1$s" (#%2$d)', 'ha-image-optimizer' ),
-					$title,
-					(int) ( $bp->ID ?? 0 )
-				);
+				$title   = ! empty( $bp->post_title ) ? $bp->post_title : ( 'ID ' . ( $bp->ID ?? 0 ) );
+				$post_id = (int) ( $bp->ID ?? 0 );
+
+				$builder_name = 'Page Builder';
+				$meta_k       = (string) ( $bp->meta_key ?? '' );
+				if ( str_contains( $meta_k, 'elementor' ) ) {
+					$builder_name = 'Elementor Layout';
+				} elseif ( str_contains( $meta_k, 'fl_builder' ) ) {
+					$builder_name = 'Beaver Builder';
+				} elseif ( str_contains( $meta_k, 'bricks' ) ) {
+					$builder_name = 'Bricks Builder';
+				} elseif ( str_contains( $meta_k, 'ct_builder' ) ) {
+					$builder_name = 'Oxygen Builder';
+				}
+
+				$references[] = [
+					'label' => sprintf(
+						/* translators: 1: builder name, 2: post title, 3: post ID */
+						__( '%1$s in "%2$s" (#%3$d)', 'ha-image-optimizer' ),
+						$builder_name,
+						$title,
+						$post_id
+					),
+					'url'   => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
+				];
 			}
 		}
 
 		// -------------------------------------------------------------
-		// 7. Status Classification
+		// 7. Custom Postmeta & ACF (Advanced Custom Fields)
 		// -------------------------------------------------------------
-		$references = array_unique( $references );
+		$acf_sql = $wpdb->prepare(
+			"SELECT p.ID, p.post_title, p.post_type, pm.meta_key FROM {$wpdb->postmeta} pm
+			INNER JOIN {$wpdb->posts} p ON (pm.post_id = p.ID)
+			WHERE pm.meta_key NOT LIKE '\_%'
+			AND pm.meta_key NOT IN ('_wp_attached_file', '_wp_attachment_metadata')
+			AND (
+				pm.meta_value = %s
+				OR pm.meta_value LIKE %s
+			)
+			AND p.post_type NOT IN ('attachment', 'revision')
+			AND p.post_status != 'trash'
+			LIMIT 3",
+			(string) $attachment_id,
+			'%i:' . $attachment_id . ';%'
+		);
+		$acf_posts = $wpdb->get_results( $acf_sql );
+
+		if ( ! empty( $acf_posts ) ) {
+			foreach ( $acf_posts as $ap ) {
+				$title   = ! empty( $ap->post_title ) ? $ap->post_title : ( 'ID ' . ( $ap->ID ?? 0 ) );
+				$post_id = (int) ( $ap->ID ?? 0 );
+				$references[] = [
+					'label' => sprintf(
+						/* translators: 1: field name, 2: post title, 3: post ID, 4: post type */
+						__( 'Benutzerdefiniertes Feld / ACF ("%1$s") in "%2$s" (#%3$d, %4$s)', 'ha-image-optimizer' ),
+						$ap->meta_key ?? 'Custom Field',
+						$title,
+						$post_id,
+						$ap->post_type ?? 'post'
+					),
+					'url'   => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
+				];
+			}
+		}
+
+		// -------------------------------------------------------------
+		// 8. Active Theme Files Scan (style.css, templates, theme.json)
+		// -------------------------------------------------------------
+		$theme_file = self::search_active_theme_files( $filename, $rel_file );
+		if ( $theme_file ) {
+			$references[] = [
+				'label' => sprintf(
+					/* translators: %s: theme file name */
+					__( 'Verwendet in Theme-Datei: "%s"', 'ha-image-optimizer' ),
+					$theme_file
+				),
+				'url'   => admin_url( 'theme-editor.php' ),
+			];
+		}
+
+		// -------------------------------------------------------------
+		// 9. Status Classification & Deduplication
+		// -------------------------------------------------------------
+		$deduped = [];
+		$seen    = [];
+		foreach ( $references as $ref ) {
+			$label = is_array( $ref ) ? ( $ref['label'] ?? '' ) : (string) $ref;
+			if ( ! empty( $label ) && ! isset( $seen[ $label ] ) ) {
+				$seen[ $label ] = true;
+				$deduped[]      = $ref;
+			}
+		}
+		$references = $deduped;
 
 		if ( ! empty( $references ) ) {
 			$status = self::STATUS_USED;
@@ -288,6 +454,10 @@ class MediaAuditor {
 			$status = self::STATUS_UNATTACHED_UNUSED;
 		}
 
+		$reference_labels = array_map( function ( $r ) {
+			return is_array( $r ) ? ( $r['label'] ?? '' ) : (string) $r;
+		}, $references );
+
 		return [
 			'id'             => $attachment_id,
 			'filename'       => $filename,
@@ -296,13 +466,63 @@ class MediaAuditor {
 			'date'           => get_the_date( 'Y-m-d H:i', $attachment_id ),
 			'parent_id'      => $parent_id,
 			'parent_title'   => $parent_title,
+			'parent_url'     => $parent_id > 0 ? admin_url( 'post.php?post=' . $parent_id . '&action=edit' ) : '',
 			'disk_bytes'     => $disk_bytes,
 			'disk_human'     => size_format( $disk_bytes ),
 			'status'         => $status,
 			'references'     => $references,
-			'reference_desc' => ! empty( $references ) ? implode( ', ', $references ) : '',
+			'reference_desc' => implode( ', ', $reference_labels ),
 			'scanned_at'     => time(),
 		];
+	}
+
+	/**
+	 * Search active theme files (style.css, templates, theme.json) for image references.
+	 *
+	 * @param string $filename Image basename.
+	 * @param string $rel_file Relative upload path.
+	 * @return string|null Found file name or null.
+	 */
+	public static function search_active_theme_files( string $filename, string $rel_file ): ?string {
+		if ( null === self::$theme_files_cache ) {
+			self::$theme_files_cache = [];
+			$dirs = [];
+
+			if ( function_exists( 'get_stylesheet_directory' ) ) {
+				$dirs[] = get_stylesheet_directory();
+			}
+			if ( function_exists( 'get_template_directory' ) ) {
+				$dirs[] = get_template_directory();
+			}
+
+			$dirs = array_unique( array_filter( $dirs ) );
+
+			foreach ( $dirs as $dir ) {
+				if ( ! is_dir( $dir ) ) {
+					continue;
+				}
+
+				// Check primary styling and config files first
+				$key_files = [ 'style.css', 'theme.json', 'header.php', 'footer.php', 'front-page.php' ];
+				foreach ( $key_files as $kf ) {
+					$full = trailingslashit( $dir ) . $kf;
+					if ( file_exists( $full ) && is_readable( $full ) && (int) @filesize( $full ) < 500000 ) {
+						self::$theme_files_cache[ $kf ] = (string) file_get_contents( $full );
+					}
+				}
+			}
+		}
+
+		foreach ( self::$theme_files_cache as $file_name => $content ) {
+			if ( ! empty( $rel_file ) && str_contains( $content, $rel_file ) ) {
+				return $file_name;
+			}
+			if ( strlen( $filename ) >= 6 && str_contains( $content, $filename ) ) {
+				return $file_name;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -520,6 +740,7 @@ class MediaAuditor {
 	 * @return bool
 	 */
 	public static function clear_results(): bool {
+		self::$theme_files_cache = null;
 		return delete_option( self::OPTION_RESULTS );
 	}
 }

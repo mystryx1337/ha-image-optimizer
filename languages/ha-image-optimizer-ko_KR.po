@@ -191,7 +191,7 @@ msgstr "Start Bulk Processing"
 msgid "Unoptimierte Bilder jetzt verarbeiten"
 msgstr "Process unoptimized images now"
 
-msgid "Alle Bilder erneut optimieren (Force All)"
+msgid "Alle Bilder erneut optimieren (Erzwingen)"
 msgstr "Re-optimize all images (Force All)"
 
 msgid "Aktivitäts-Protokoll"

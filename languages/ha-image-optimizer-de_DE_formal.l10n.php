@@ -77,7 +77,7 @@ return [
         'Gesparter Speicherplatz' => 'Gesparter Speicherplatz',
         'Massenverarbeitung starten' => 'Massenverarbeitung starten',
         'Unoptimierte Bilder jetzt verarbeiten' => 'Unoptimierte Bilder jetzt verarbeiten',
-        'Alle Bilder erneut optimieren (Force All)' => 'Alle Bilder erneut optimieren (Force All)',
+        'Alle Bilder erneut optimieren (Erzwingen)' => 'Alle Bilder erneut optimieren (Erzwingen)',
         'Aktivitäts-Protokoll' => 'Aktivitäts-Protokoll',
         'Dieses Bild wurde noch nicht optimiert.' => 'Dieses Bild wurde noch nicht optimiert.',
         'Jetzt optimieren' => 'Jetzt optimieren',

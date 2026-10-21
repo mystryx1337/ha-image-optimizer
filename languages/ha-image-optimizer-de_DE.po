@@ -191,8 +191,8 @@ msgstr "Massenverarbeitung starten"
 msgid "Unoptimierte Bilder jetzt verarbeiten"
 msgstr "Unoptimierte Bilder jetzt verarbeiten"
 
-msgid "Alle Bilder erneut optimieren (Force All)"
-msgstr "Alle Bilder erneut optimieren (Force All)"
+msgid "Alle Bilder erneut optimieren (Erzwingen)"
+msgstr "Alle Bilder erneut optimieren (Erzwingen)"
 
 msgid "Aktivitäts-Protokoll"
 msgstr "Aktivitäts-Protokoll"

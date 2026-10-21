@@ -191,7 +191,7 @@ msgstr "Démarrer le traitement en masse"
 msgid "Unoptimierte Bilder jetzt verarbeiten"
 msgstr "Traiter les images non optimisées maintenant"
 
-msgid "Alle Bilder erneut optimieren (Force All)"
+msgid "Alle Bilder erneut optimieren (Erzwingen)"
 msgstr "Réoptimiser toutes les images"
 
 msgid "Aktivitäts-Protokoll"

@@ -333,13 +333,37 @@
 			setStep(4);
 
 			$('#ha-io-btn-pause-bulk').hide();
-			$('#ha-io-btn-start-bulk, #ha-io-btn-start-bulk-all').prop('disabled', false);
+			$('#ha-io-btn-start-bulk, #ha-io-btn-start-bulk-all, #ha-io-btn-start-custom').prop('disabled', false);
 			$('#ha-io-progress-bar').css('width', '100%');
 			$('#ha-io-current-action-title').text('🎉 ' + (ha_io_vars.i18n.completed || 'Optimierung vollständig abgeschlossen!'));
 			$('#ha-io-current-action-desc').text('Insgesamt wurden ' + formatBytes(totalSavedBytes) + ' Speicherplatz auf dem Server gespart. Alle Caches wurden bereinigt.');
 			$('#ha-io-current-file-badge').hide();
 
 			appendLog('🏁 Massenoptimierung beendet. Insgesamt ' + formatBytes(totalSavedBytes) + ' gespart.');
+
+			// Refresh top overview cards dynamically
+			$.ajax({
+				url: ha_io_vars.ajax_url,
+				method: 'POST',
+				data: {
+					action: 'ha_io_get_bulk_stats',
+					nonce: ha_io_vars.nonce
+				},
+				success: function (res) {
+					if (res.success && res.data && res.data.stats) {
+						const s = res.data.stats;
+						$('#ha-io-stat-total').text(s.total_images);
+						$('#ha-io-stat-optimized').text(s.optimized_images);
+						$('#ha-io-stat-unoptimized').text(s.unoptimized);
+						$('#ha-io-stat-saved').text(s.saved_human);
+						$('#ha-io-stat-percent').text(s.saved_percent);
+
+						if (s.unoptimized === 0) {
+							$('#ha-io-btn-start-bulk').prop('disabled', true);
+						}
+					}
+				}
+			});
 		}
 
 		function appendLog(text) {

@@ -92,21 +92,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 		<!-- Action Buttons -->
 		<div class="ha-io-bulk-actions">
-			<button type="button" class="button button-primary button-hero ha-io-btn-hero" id="ha-io-btn-start-bulk" <?php disabled( 0 === $stats['unoptimized'] ); ?>>
+			<button type="button" class="button button-primary ha-io-bulk-btn" id="ha-io-btn-start-bulk" <?php disabled( 0 === $stats['unoptimized'] ); ?>>
 				⚡ <?php esc_html_e( 'Mediathek optimieren', 'ha-image-optimizer' ); ?>
 			</button>
 
 			<?php if ( ! empty( $custom_stats['total_images'] ) ) : ?>
-				<button type="button" class="button button-primary ha-io-btn-hero" id="ha-io-btn-start-custom" <?php disabled( 0 === $custom_stats['unoptimized'] ); ?>>
+				<button type="button" class="button button-primary ha-io-bulk-btn" id="ha-io-btn-start-custom" <?php disabled( 0 === $custom_stats['unoptimized'] ); ?>>
 					🎨 <?php esc_html_e( 'Theme-Ordner optimieren', 'ha-image-optimizer' ); ?> (<?php echo esc_html( $custom_stats['unoptimized'] ); ?>)
 				</button>
 			<?php endif; ?>
 
-			<button type="button" class="button button-secondary" id="ha-io-btn-start-bulk-all">
-				🔄 <?php esc_html_e( 'Mediathek Force All', 'ha-image-optimizer' ); ?>
+			<button type="button" class="button button-secondary ha-io-bulk-btn" id="ha-io-btn-start-bulk-all">
+				🔄 <?php esc_html_e( 'Alle Bilder erneut optimieren (Erzwingen)', 'ha-image-optimizer' ); ?>
 			</button>
 
-			<button type="button" class="button" id="ha-io-btn-pause-bulk" style="display: none;">
+			<button type="button" class="button button-secondary ha-io-bulk-btn" id="ha-io-btn-pause-bulk" style="display: none;">
 				⏸️ <?php esc_html_e( 'Pausieren', 'ha-image-optimizer' ); ?>
 			</button>
 		</div>

@@ -5,7 +5,7 @@ Tags: image optimizer, webp, avif, compression, performance, media library
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -42,6 +42,14 @@ Nein. Das Plugin arbeitet zu 100% lokal auf deinem Webserver über PHP Imagick o
 Gemäß den HA-Standards werden deine Backups und WebP-Dateien standardmäßig geschützt und nicht gelöscht. In den Einstellungen gibt es einen expliziten Schalter für die vollständige Bereinigung bei Deinstallation.
 
 == Changelog ==
+
+= 1.2.1 =
+* Neu: Direkte Verlinkung gefundener Posts, Seiten, WooCommerce-Produkte, Theme-Customizer-Sektionen und Theme-Dateien in der Spalte "Fundorte & Verwendungs-Nachweise".
+* Neu: Erweiterte Theme- und Customizer-Erkennung (Header-Bild, Hintergrundbild, Theme-Logo, Browser-Favicon, FSE Block-Theme Templates & Scan aktiver Theme-Dateien wie style.css und theme.json).
+* Neu: Vollständige Page-Builder-Sicherheit: Robuste Erkennung für Elementor (_elementor_data, generiertes CSS, globale Kits), Divi, WPBakery, Beaver Builder, Bricks, Oxygen und ACF (Advanced Custom Fields).
+* Fix: Behebung der Speicherplatz-Inkonsistenz bei "Alle erneut optimieren (Erzwingen)" durch automatische Wiederherstellung aus dem Original-Backup bzw. Wahrung der unkomprimierten Ausgangsbasis.
+* UI: Vollständig einheitliche Button-Größen und Abstände im Massenoptimierer.
+* i18n: Vollständige Übersetzung des "Alle erneut optimieren (Erzwingen)"-Buttons in alle 26 Sprachpakete.
 
 = 1.2.0 =
 * Neu: Intelligenter Medien-Auditor ("Verwaiste Medien") unter Medien -> Verwaiste Medien.

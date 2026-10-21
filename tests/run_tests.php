@@ -390,6 +390,18 @@ namespace {
 		}
 	}
 
+	if ( ! function_exists( 'get_stylesheet_directory' ) ) {
+		function get_stylesheet_directory(): string {
+			return sys_get_temp_dir();
+		}
+	}
+
+	if ( ! function_exists( 'get_template_directory' ) ) {
+		function get_template_directory(): string {
+			return sys_get_temp_dir();
+		}
+	}
+
 	class MockWpdb {
 		public string $posts     = 'wp_posts';
 		public string $postmeta  = 'wp_postmeta';
@@ -733,6 +745,8 @@ namespace HA_Image_Optimizer_Tests {
 			$auditUsed = MediaAuditor::audit_attachment( 1 );
 			$this->assert( MediaAuditor::STATUS_USED === $auditUsed['status'], 'Detected used attachment with featured image reference' );
 			$this->assert( ! empty( $auditUsed['references'] ), 'Contains detailed reference labels' );
+			$this->assert( ! empty( $auditUsed['references'][0]['url'] ), 'Reference includes direct edit link' );
+			$this->assert( str_contains( $auditUsed['references'][0]['label'], 'Beitragsbild' ), 'Reference label identifies featured image' );
 
 			// Test caching and metric calculation
 			$mockItems = [

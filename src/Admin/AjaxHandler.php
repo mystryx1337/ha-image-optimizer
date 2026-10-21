@@ -34,6 +34,7 @@ class AjaxHandler {
 		add_action( 'wp_ajax_ha_io_restore_single', [ __CLASS__, 'handle_restore_single' ] );
 		add_action( 'wp_ajax_ha_io_bulk_batch', [ __CLASS__, 'handle_bulk_batch' ] );
 		add_action( 'wp_ajax_ha_io_get_bulk_queue', [ __CLASS__, 'handle_get_bulk_queue' ] );
+		add_action( 'wp_ajax_ha_io_get_bulk_stats', [ __CLASS__, 'handle_get_bulk_stats' ] );
 		add_action( 'wp_ajax_ha_io_get_custom_queue', [ __CLASS__, 'handle_get_custom_queue' ] );
 		add_action( 'wp_ajax_ha_io_bulk_custom_batch', [ __CLASS__, 'handle_bulk_custom_batch' ] );
 		add_action( 'wp_ajax_ha_io_restore_custom', [ __CLASS__, 'handle_restore_custom' ] );
@@ -122,6 +123,41 @@ class AjaxHandler {
 		wp_send_json_success( [
 			'queue' => $queue,
 			'total' => count( $queue ),
+		] );
+	}
+
+	/**
+	 * Retrieve fresh statistics for bulk optimizer overview cards.
+	 *
+	 * @return void
+	 */
+	public static function handle_get_bulk_stats(): void {
+		check_ajax_referer( 'ha_io_admin_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => esc_html__( 'Keine Berechtigung.', 'ha-image-optimizer' ) ], 403 );
+		}
+
+		$stats        = ProgressTracker::get_stats();
+		$custom_stats = CustomFolderProcessor::get_stats();
+
+		wp_send_json_success( [
+			'stats'        => [
+				'total_images'     => $stats['total_images'],
+				'optimized_images' => $stats['optimized_images'],
+				'unoptimized'      => $stats['unoptimized'],
+				'saved_bytes'      => $stats['saved_bytes'],
+				'saved_human'      => size_format( $stats['saved_bytes'] ),
+				'saved_percent'    => $stats['saved_percent'],
+			],
+			'custom_stats' => [
+				'total_images'     => $custom_stats['total_images'],
+				'optimized_images' => $custom_stats['optimized_images'],
+				'unoptimized'      => $custom_stats['unoptimized'],
+				'saved_bytes'      => $custom_stats['saved_bytes'],
+				'saved_human'      => size_format( $custom_stats['saved_bytes'] ),
+				'saved_percent'    => $custom_stats['saved_percent'],
+			],
 		] );
 	}
 

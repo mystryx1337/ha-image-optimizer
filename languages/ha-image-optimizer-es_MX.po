@@ -191,7 +191,7 @@ msgstr "Iniciar procesamiento masivo"
 msgid "Unoptimierte Bilder jetzt verarbeiten"
 msgstr "Procesar imágenes no optimizadas ahora"
 
-msgid "Alle Bilder erneut optimieren (Force All)"
+msgid "Alle Bilder erneut optimieren (Erzwingen)"
 msgstr "Reoptimizar todas las imágenes"
 
 msgid "Aktivitäts-Protokoll"

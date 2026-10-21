@@ -82,12 +82,20 @@ class AttachmentProcessor {
 
 		$settings = Settings::get_all();
 
-		// 1. Backup original before any modification
+		// 1. If forcing re-optimization and backup exists, restore master so we compress from pristine original
+		if ( $force && BackupManager::has_backup( $attachment_id ) ) {
+			$backup_file = BackupManager::get_backup_file_path( $attachment_id, $file );
+			if ( file_exists( $backup_file ) ) {
+				@copy( $backup_file, $file );
+			}
+		}
+
+		// 2. Backup original before any modification (if not already backed up)
 		if ( ! empty( $settings['backup_originals'] ) ) {
 			BackupManager::backup( $attachment_id, $file );
 		}
 
-		// 2. Downscale if oversized
+		// 3. Downscale if oversized
 		if ( ! empty( $settings['resize_large_images'] ) ) {
 			Resizer::maybe_downscale( $file, (int) $settings['max_width'], (int) $settings['max_height'] );
 		}
@@ -121,11 +129,14 @@ class AttachmentProcessor {
 			],
 		];
 
-		// 3. Optimize Original Master File
+		// 4. Optimize Original Master File
 		$orig_before = (int) filesize( $file );
+		if ( $force && ! empty( $existing_data['original']['before'] ) && (int) $existing_data['original']['before'] > $orig_before ) {
+			$orig_before = (int) $existing_data['original']['before'];
+		}
 		$stats['total']['before'] += $orig_before;
 
-		$orig_res = $optimizer->optimize( $file, $orig_level, $keep_exif );
+		$orig_res   = $optimizer->optimize( $file, $orig_level, $keep_exif );
 		$orig_after = (int) filesize( $file );
 		$stats['total']['after'] += $orig_after;
 
@@ -151,7 +162,7 @@ class AttachmentProcessor {
 			}
 		}
 
-		// 4. Optimize Sub-Sizes (Thumbnails)
+		// 5. Optimize Sub-Sizes (Thumbnails)
 		$base_dir = dirname( $file );
 		if ( ! empty( $metadata['sizes'] ) && is_array( $metadata['sizes'] ) ) {
 			foreach ( $metadata['sizes'] as $size_name => $size_info ) {
@@ -167,6 +178,9 @@ class AttachmentProcessor {
 				}
 
 				$sub_before = (int) filesize( $sub_file );
+				if ( $force && ! empty( $existing_data['sizes'][ $size_name ]['before'] ) && (int) $existing_data['sizes'][ $size_name ]['before'] > $sub_before ) {
+					$sub_before = (int) $existing_data['sizes'][ $size_name ]['before'];
+				}
 				$stats['total']['before'] += $sub_before;
 
 				$optimizer->optimize( $sub_file, $sizes_level, false );

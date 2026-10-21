@@ -77,7 +77,7 @@ return [
         'Gesparter Speicherplatz' => 'Espacio ahorrado',
         'Massenverarbeitung starten' => 'Iniciar procesamiento masivo',
         'Unoptimierte Bilder jetzt verarbeiten' => 'Procesar imágenes no optimizadas ahora',
-        'Alle Bilder erneut optimieren (Force All)' => 'Reoptimizar todas las imágenes',
+        'Alle Bilder erneut optimieren (Erzwingen)' => 'Reoptimizar todas las imágenes',
         'Aktivitäts-Protokoll' => 'Registro de actividad',
         'Dieses Bild wurde noch nicht optimiert.' => 'Esta imagen aún no ha sido optimizada.',
         'Jetzt optimieren' => 'Optimizar ahora',

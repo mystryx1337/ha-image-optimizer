@@ -259,8 +259,20 @@ class CustomFolderProcessor {
 			return $stored[ $key ];
 		}
 
+		// If forcing re-optimization and backup exists, restore pristine original first
+		if ( $force ) {
+			$custom_backup = BackupManager::get_custom_backup_file_path( $abs_path );
+			if ( file_exists( $custom_backup ) ) {
+				@copy( $custom_backup, $abs_path );
+			}
+		}
+
 		$before_size = (int) filesize( $abs_path );
-		$settings    = Settings::get_all();
+		if ( $force && ! empty( $stored[ $key ]['before'] ) && (int) $stored[ $key ]['before'] > $before_size ) {
+			$before_size = (int) $stored[ $key ]['before'];
+		}
+
+		$settings = Settings::get_all();
 
 		// 1. Backup original before touching
 		if ( ! empty( $settings['backup_originals'] ) ) {
