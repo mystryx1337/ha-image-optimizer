@@ -241,6 +241,12 @@ namespace {
 		}
 	}
 
+	if ( ! function_exists( 'admin_url' ) ) {
+		function admin_url( $path = '', $scheme = 'admin' ): string {
+			return 'https://example.com/wp-admin/' . ltrim( $path, '/' );
+		}
+	}
+
 	if ( ! function_exists( 'current_user_can' ) ) {
 		function current_user_can( $capability, ...$args ): bool {
 			return true;

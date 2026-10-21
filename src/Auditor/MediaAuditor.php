@@ -126,7 +126,7 @@ class MediaAuditor {
 						$post_id,
 						$fp->post_type ?? 'post'
 					),
-					'url'   => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
+					'url'   => self::safe_admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
 				];
 			}
 		}
@@ -165,7 +165,7 @@ class MediaAuditor {
 						$title,
 						$post_id
 					),
-					'url'   => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
+					'url'   => self::safe_admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
 				];
 			}
 		}
@@ -177,7 +177,7 @@ class MediaAuditor {
 		if ( $site_icon === $attachment_id ) {
 			$references[] = [
 				'label' => __( 'Website-Icon (Browser Favicon)', 'ha-image-optimizer' ),
-				'url'   => admin_url( 'customize.php?autofocus[section]=title_tagline' ),
+				'url'   => self::safe_admin_url( 'customize.php?autofocus[section]=title_tagline' ),
 			];
 		}
 
@@ -185,7 +185,7 @@ class MediaAuditor {
 		if ( $custom_logo === $attachment_id ) {
 			$references[] = [
 				'label' => __( 'Offizielles Website-Logo (Theme Header)', 'ha-image-optimizer' ),
-				'url'   => admin_url( 'customize.php?autofocus[control]=custom_logo' ),
+				'url'   => self::safe_admin_url( 'customize.php?autofocus[control]=custom_logo' ),
 			];
 		}
 
@@ -193,7 +193,7 @@ class MediaAuditor {
 		if ( $site_logo === $attachment_id && $custom_logo !== $attachment_id ) {
 			$references[] = [
 				'label' => __( 'Website-Logo (FSE Block Theme)', 'ha-image-optimizer' ),
-				'url'   => admin_url( 'site-editor.php' ),
+				'url'   => self::safe_admin_url( 'site-editor.php' ),
 			];
 		}
 
@@ -211,7 +211,7 @@ class MediaAuditor {
 		if ( $is_header_match ) {
 			$references[] = [
 				'label' => __( 'Theme Header-Bild (Customizer)', 'ha-image-optimizer' ),
-				'url'   => admin_url( 'customize.php?autofocus[control]=header_image' ),
+				'url'   => self::safe_admin_url( 'customize.php?autofocus[control]=header_image' ),
 			];
 		}
 
@@ -220,7 +220,7 @@ class MediaAuditor {
 		if ( ! empty( $rel_file ) && str_contains( $bg_image_url, $rel_file ) ) {
 			$references[] = [
 				'label' => __( 'Theme Hintergrundbild (Customizer)', 'ha-image-optimizer' ),
-				'url'   => admin_url( 'customize.php?autofocus[control]=background_image' ),
+				'url'   => self::safe_admin_url( 'customize.php?autofocus[control]=background_image' ),
 			];
 		}
 
@@ -250,7 +250,7 @@ class MediaAuditor {
 							$tr->name ?? 'Kategorie',
 							$tax
 						),
-						'url'   => admin_url( 'term.php?taxonomy=' . $tax . '&tag_ID=' . $term_id ),
+						'url'   => self::safe_admin_url( 'term.php?taxonomy=' . $tax . '&tag_ID=' . $term_id ),
 					];
 				}
 			}
@@ -313,7 +313,7 @@ class MediaAuditor {
 						$post_id,
 						$type_label
 					),
-					'url'   => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
+					'url'   => self::safe_admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
 				];
 			}
 		}
@@ -374,7 +374,7 @@ class MediaAuditor {
 						$title,
 						$post_id
 					),
-					'url'   => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
+					'url'   => self::safe_admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
 				];
 			}
 		}
@@ -412,7 +412,7 @@ class MediaAuditor {
 						$post_id,
 						$ap->post_type ?? 'post'
 					),
-					'url'   => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
+					'url'   => self::safe_admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
 				];
 			}
 		}
@@ -428,7 +428,7 @@ class MediaAuditor {
 					__( 'Verwendet in Theme-Datei: "%s"', 'ha-image-optimizer' ),
 					$theme_file
 				),
-				'url'   => admin_url( 'theme-editor.php' ),
+				'url'   => self::safe_admin_url( 'theme-editor.php' ),
 			];
 		}
 
@@ -466,7 +466,7 @@ class MediaAuditor {
 			'date'           => get_the_date( 'Y-m-d H:i', $attachment_id ),
 			'parent_id'      => $parent_id,
 			'parent_title'   => $parent_title,
-			'parent_url'     => $parent_id > 0 ? admin_url( 'post.php?post=' . $parent_id . '&action=edit' ) : '',
+			'parent_url'     => $parent_id > 0 ? self::safe_admin_url( 'post.php?post=' . $parent_id . '&action=edit' ) : '',
 			'disk_bytes'     => $disk_bytes,
 			'disk_human'     => size_format( $disk_bytes ),
 			'status'         => $status,
@@ -523,6 +523,19 @@ class MediaAuditor {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Safe helper to generate admin URLs.
+	 *
+	 * @param string $path Relative admin path.
+	 * @return string
+	 */
+	private static function safe_admin_url( string $path ): string {
+		if ( function_exists( 'admin_url' ) ) {
+			return admin_url( $path );
+		}
+		return 'wp-admin/' . ltrim( $path, '/' );
 	}
 
 	/**
