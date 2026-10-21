@@ -407,14 +407,17 @@ namespace {
 					(object) [ 'ID' => 42, 'post_title' => 'Beispielbeitrag', 'post_type' => 'post' ],
 				];
 			}
-			return [
-				(object) [
-					'post_id'    => 1,
-					'meta_value' => serialize( [
-						'total' => [ 'before' => 100000, 'after' => 60000, 'saved' => 40000, 'percent' => 40.0 ],
-					] ),
-				],
-			];
+			if ( str_contains( $query, '_ha_io_data' ) ) {
+				return [
+					(object) [
+						'post_id'    => 1,
+						'meta_value' => serialize( [
+							'total' => [ 'before' => 100000, 'after' => 60000, 'saved' => 40000, 'percent' => 40.0 ],
+						] ),
+					],
+				];
+			}
+			return [];
 		}
 
 		public function get_col( $query ) {
@@ -549,6 +552,7 @@ namespace HA_Image_Optimizer_Tests {
 				CustomFolderProcessor::class,
 				ContentFilter::class,
 				HtaccessManager::class,
+				MediaAuditor::class,
 			];
 
 			foreach ( $classes as $class ) {

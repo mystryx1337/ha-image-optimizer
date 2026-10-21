@@ -103,13 +103,13 @@ class MediaAuditor {
 
 		if ( ! empty( $featured_posts ) ) {
 			foreach ( $featured_posts as $fp ) {
-				$title = $fp->post_title ? $fp->post_title : ( 'ID ' . $fp->ID );
+				$title = ! empty( $fp->post_title ) ? $fp->post_title : ( 'ID ' . ( $fp->ID ?? 0 ) );
 				$references[] = sprintf(
 					/* translators: 1: post title, 2: post ID, 3: post type */
 					__( 'Beitragsbild in "%1$s" (#%2$d, %3$s)', 'ha-image-optimizer' ),
 					$title,
-					(int) $fp->ID,
-					$fp->post_type
+					(int) ( $fp->ID ?? 0 ),
+					$fp->post_type ?? 'post'
 				);
 			}
 		}
@@ -139,12 +139,12 @@ class MediaAuditor {
 
 		if ( ! empty( $gallery_posts ) ) {
 			foreach ( $gallery_posts as $gp ) {
-				$title = $gp->post_title ? $gp->post_title : ( 'ID ' . $gp->ID );
+				$title = ! empty( $gp->post_title ) ? $gp->post_title : ( 'ID ' . ( $gp->ID ?? 0 ) );
 				$references[] = sprintf(
 					/* translators: 1: product title, 2: product ID */
 					__( 'WooCommerce Produktgalerie in "%1$s" (#%2$d)', 'ha-image-optimizer' ),
 					$title,
-					(int) $gp->ID
+					(int) ( $gp->ID ?? 0 )
 				);
 			}
 		}
@@ -187,8 +187,8 @@ class MediaAuditor {
 					$references[] = sprintf(
 						/* translators: 1: category name, 2: taxonomy name */
 						__( 'Kategorie-Vorschaubild in "%1$s" (%2$s)', 'ha-image-optimizer' ),
-						$tr->name,
-						$tr->taxonomy
+						$tr->name ?? 'Kategorie',
+						$tr->taxonomy ?? 'category'
 					);
 				}
 			}
@@ -234,13 +234,13 @@ class MediaAuditor {
 		$content_posts = $wpdb->get_results( $content_sql );
 		if ( ! empty( $content_posts ) ) {
 			foreach ( $content_posts as $cp ) {
-				$title = $cp->post_title ? $cp->post_title : ( 'ID ' . $cp->ID );
+				$title = ! empty( $cp->post_title ) ? $cp->post_title : ( 'ID ' . ( $cp->ID ?? 0 ) );
 				$references[] = sprintf(
 					/* translators: 1: post title, 2: post ID, 3: post type */
 					__( 'Eingebunden im Inhalt von "%1$s" (#%2$d, %3$s)', 'ha-image-optimizer' ),
 					$title,
-					(int) $cp->ID,
-					$cp->post_type
+					(int) ( $cp->ID ?? 0 ),
+					$cp->post_type ?? 'post'
 				);
 			}
 		}
@@ -265,12 +265,12 @@ class MediaAuditor {
 
 		if ( ! empty( $builder_posts ) ) {
 			foreach ( $builder_posts as $bp ) {
-				$title = $bp->post_title ? $bp->post_title : ( 'ID ' . $bp->ID );
+				$title = ! empty( $bp->post_title ) ? $bp->post_title : ( 'ID ' . ( $bp->ID ?? 0 ) );
 				$references[] = sprintf(
 					/* translators: 1: post title, 2: post ID */
 					__( 'Elementor Layout in "%1$s" (#%2$d)', 'ha-image-optimizer' ),
 					$title,
-					(int) $bp->ID
+					(int) ( $bp->ID ?? 0 )
 				);
 			}
 		}
