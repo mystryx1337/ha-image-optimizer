@@ -7,7 +7,7 @@
  * Requires at least: 6.0
  * Requires PHP:      8.1
  * Author:            Alexander Hacker
- * Author URI:        https://7south.digital
+ * Author URI:        https://seo-hacker.de/
  * License:           GPL-3.0
  * License URI:       https://www.gnu.org/licenses/gpl-3.0.txt
  * Text Domain:       ha-image-optimizer
