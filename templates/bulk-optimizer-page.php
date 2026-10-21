@@ -37,14 +37,39 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</div>
 	</div>
 
+	<!-- Main Execution Card -->
 	<div class="ha-io-card ha-io-bulk-card">
 		<h2>🚀 <?php esc_html_e( 'Massenverarbeitung starten', 'ha-image-optimizer' ); ?></h2>
 		<p>
 			<?php esc_html_e( 'Die Massenoptimierung verarbeitet deine gesamte Mediathek lokal im Hintergrund. Für jedes Bild wird das Original verlustfrei optimiert, alle Zwischengrößen komprimiert und moderne WebP/AVIF-Versionen erzeugt.', 'ha-image-optimizer' ); ?>
 		</p>
 
+		<!-- Visual Stepper Bar -->
+		<div class="ha-io-stepper" id="ha-io-stepper">
+			<div class="ha-io-step" id="ha-io-step-1">
+				<span class="ha-io-step-num">1</span>
+				<span class="ha-io-step-label"><?php esc_html_e( 'Mediathek scannen', 'ha-image-optimizer' ); ?></span>
+			</div>
+			<div class="ha-io-step-connector"></div>
+			<div class="ha-io-step" id="ha-io-step-2">
+				<span class="ha-io-step-num">2</span>
+				<span class="ha-io-step-label"><?php esc_html_e( 'Original & Sub-Sizes optimieren', 'ha-image-optimizer' ); ?></span>
+			</div>
+			<div class="ha-io-step-connector"></div>
+			<div class="ha-io-step" id="ha-io-step-3">
+				<span class="ha-io-step-num">3</span>
+				<span class="ha-io-step-label"><?php esc_html_e( 'WebP & AVIF erzeugen', 'ha-image-optimizer' ); ?></span>
+			</div>
+			<div class="ha-io-step-connector"></div>
+			<div class="ha-io-step" id="ha-io-step-4">
+				<span class="ha-io-step-num">4</span>
+				<span class="ha-io-step-label"><?php esc_html_e( 'Abgeschlossen', 'ha-image-optimizer' ); ?></span>
+			</div>
+		</div>
+
+		<!-- Action Buttons -->
 		<div class="ha-io-bulk-actions">
-			<button type="button" class="button button-primary button-hero" id="ha-io-btn-start-bulk" <?php disabled( 0 === $stats['unoptimized'] ); ?>>
+			<button type="button" class="button button-primary button-hero ha-io-btn-hero" id="ha-io-btn-start-bulk" <?php disabled( 0 === $stats['unoptimized'] ); ?>>
 				⚡ <?php esc_html_e( 'Unoptimierte Bilder jetzt verarbeiten', 'ha-image-optimizer' ); ?>
 			</button>
 
@@ -57,21 +82,71 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</button>
 		</div>
 
-		<!-- Progress Container -->
-		<div id="ha-io-progress-container" style="display: none; margin-top: 25px;">
+		<!-- Live Current Action Display -->
+		<div class="ha-io-live-action-box" id="ha-io-live-action-box" style="display: none;">
+			<div class="ha-io-live-action-header">
+				<span class="ha-io-pulse-indicator"></span>
+				<div class="ha-io-live-action-text-group">
+					<strong class="ha-io-live-title" id="ha-io-current-action-title">
+						<?php esc_html_e( 'Bereite Queue vor...', 'ha-image-optimizer' ); ?>
+					</strong>
+					<span class="ha-io-live-desc" id="ha-io-current-action-desc">
+						<?php esc_html_e( 'Durchsuche die Datenbank nach Bildern...', 'ha-image-optimizer' ); ?>
+					</span>
+				</div>
+			</div>
+			<div class="ha-io-current-file-badge" id="ha-io-current-file-badge" style="display: none;">
+				<span class="ha-io-cf-label"><?php esc_html_e( 'Aktuelle Datei:', 'ha-image-optimizer' ); ?></span>
+				<code id="ha-io-current-filename">—</code>
+			</div>
+		</div>
+
+		<!-- Animated Progress Bar -->
+		<div id="ha-io-progress-container" style="display: none;">
 			<div class="ha-io-progress-bar-bg">
 				<div class="ha-io-progress-bar-fill" id="ha-io-progress-bar" style="width: 0%;"></div>
 			</div>
 			<div class="ha-io-progress-info">
-				<span id="ha-io-progress-status"><?php esc_html_e( 'Bereite Queue vor...', 'ha-image-optimizer' ); ?></span>
-				<span id="ha-io-progress-counts">0 / 0</span>
+				<span id="ha-io-progress-status"><?php esc_html_e( 'Verarbeite Bilder...', 'ha-image-optimizer' ); ?></span>
+				<span id="ha-io-progress-counts">0 / 0 (0%)</span>
 			</div>
 		</div>
 
-		<!-- Live Log -->
-		<div id="ha-io-log-container" style="display: none; margin-top: 20px;">
-			<h3><?php esc_html_e( 'Aktivitäts-Protokoll', 'ha-image-optimizer' ); ?></h3>
+		<!-- Collapsible History Dropdown of processed files -->
+		<details class="ha-io-history-dropdown" id="ha-io-history-dropdown" open style="display: none;">
+			<summary class="ha-io-history-summary">
+				<div class="ha-io-history-summary-left">
+					<span class="ha-io-history-icon">📋</span>
+					<strong><?php esc_html_e( 'Bereits verarbeitete Bilder in diesem Durchlauf', 'ha-image-optimizer' ); ?></strong>
+					<span class="ha-io-badge ha-io-badge-green" id="ha-io-history-count">0</span>
+				</div>
+				<span class="ha-io-history-arrow">▾</span>
+			</summary>
+
+			<div class="ha-io-history-content">
+				<table class="ha-io-history-table widefat striped">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Dateiname', 'ha-image-optimizer' ); ?></th>
+							<th><?php esc_html_e( 'Vorher', 'ha-image-optimizer' ); ?></th>
+							<th><?php esc_html_e( 'Nachher', 'ha-image-optimizer' ); ?></th>
+							<th><?php esc_html_e( 'Ersparnis', 'ha-image-optimizer' ); ?></th>
+							<th><?php esc_html_e( 'Next-Gen', 'ha-image-optimizer' ); ?></th>
+						</tr>
+					</thead>
+					<tbody id="ha-io-history-tbody">
+						<!-- Dynamically appended by JavaScript -->
+					</tbody>
+				</table>
+			</div>
+		</details>
+
+		<!-- Live Technical Log -->
+		<details class="ha-io-log-details" id="ha-io-log-container" style="display: none;">
+			<summary>
+				<strong><?php esc_html_e( 'Detailliertes System-Protokoll anzeigen', 'ha-image-optimizer' ); ?></strong>
+			</summary>
 			<ul class="ha-io-log-list" id="ha-io-log-list"></ul>
-		</div>
+		</details>
 	</div>
 </div>

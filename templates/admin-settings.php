@@ -25,6 +25,29 @@ $delete_data_on_uninstall = (bool) get_option( 'ha_io_delete_data_on_uninstall',
 		</div>
 	<?php endif; ?>
 
+	<!-- Quick-Start Banner -->
+	<div class="ha-io-quick-start-card">
+		<div class="ha-io-quick-start-text">
+			<span class="ha-io-pulse-dot"></span>
+			<div>
+				<strong><?php esc_html_e( 'Massenoptimierung bereit:', 'ha-image-optimizer' ); ?></strong>
+				<span>
+					<?php
+					printf(
+						/* translators: 1: unoptimized images count, 2: total images count */
+						esc_html__( '%1$d von %2$d Bildern können noch optimiert werden.', 'ha-image-optimizer' ),
+						(int) $stats['unoptimized'],
+						(int) $stats['total_images']
+					);
+					?>
+				</span>
+			</div>
+		</div>
+		<a href="<?php echo esc_url( admin_url( 'upload.php?page=ha-image-optimizer-bulk' ) ); ?>" class="button button-primary button-hero ha-io-btn-hero">
+			⚡ <?php esc_html_e( 'Massenoptimierung jetzt starten', 'ha-image-optimizer' ); ?>
+		</a>
+	</div>
+
 	<!-- 1. System Diagnostics Widget -->
 	<div class="ha-io-card ha-io-card-diagnostic">
 		<h2>🖥️ <?php esc_html_e( 'Server-Fähigkeiten & Diagnose', 'ha-image-optimizer' ); ?></h2>

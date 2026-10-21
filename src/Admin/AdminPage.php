@@ -29,6 +29,32 @@ class AdminPage {
 		add_action( 'admin_menu', [ __CLASS__, 'add_menu_pages' ] );
 		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_assets' ] );
 		add_action( 'admin_post_ha_io_save_settings', [ __CLASS__, 'handle_save_settings' ] );
+		add_filter( 'plugin_action_links_' . HA_IO_BASENAME, [ __CLASS__, 'add_plugin_action_links' ] );
+	}
+
+	/**
+	 * Add custom action links on wp-admin/plugins.php.
+	 *
+	 * @param array<string, string> $links Default action links.
+	 * @return array<string, string>
+	 */
+	public static function add_plugin_action_links( array $links ): array {
+		$settings_link = sprintf(
+			'<a href="%s">%s</a>',
+			esc_url( admin_url( 'options-general.php?page=ha-image-optimizer' ) ),
+			esc_html__( 'Einstellungen', 'ha-image-optimizer' )
+		);
+
+		$bulk_link = sprintf(
+			'<a href="%s" style="font-weight: 600; color: #1a7f37;">%s</a>',
+			esc_url( admin_url( 'upload.php?page=ha-image-optimizer-bulk' ) ),
+			esc_html__( '⚡ Massenoptimierung', 'ha-image-optimizer' )
+		);
+
+		array_unshift( $links, $bulk_link );
+		array_unshift( $links, $settings_link );
+
+		return $links;
 	}
 
 	/**

@@ -5,6 +5,10 @@
  * @package HA_Image_Optimizer
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 return [
     'source'  => 'ha-image-optimizer-nl_NL.po',
     'headers' => [

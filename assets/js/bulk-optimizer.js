@@ -78,15 +78,16 @@
 		});
 
 		// -------------------------------------------------------------
-		// 2. Bulk Optimization Runner
+		// 2. Enhanced Bulk Optimization Runner
 		// -------------------------------------------------------------
 		let bulkQueue = [];
 		let bulkTotal = 0;
 		let bulkProcessed = 0;
+		let totalSavedBytes = 0;
 		let isPaused = false;
 		let isRunning = false;
 		let forceAll = false;
-		const batchSize = 2; // Process 2 images per request to prevent PHP timeouts
+		const batchSize = 2; // Process 2 images per request to prevent PHP memory limits/timeouts
 
 		$('#ha-io-btn-start-bulk').on('click', function () {
 			forceAll = false;
@@ -102,28 +103,51 @@
 			if (!isPaused) {
 				isPaused = true;
 				$(this).text(ha_io_vars.i18n.resume || 'Fortsetzen');
-				$('#ha-io-progress-status').text('Pausiert...');
+				$('#ha-io-current-action-title').text('Pausiert');
+				$('#ha-io-current-action-desc').text('Klicke auf "Fortsetzen", um die Verarbeitung weiterzuführen.');
 			} else {
 				isPaused = false;
 				$(this).text(ha_io_vars.i18n.pause || 'Pausieren');
-				$('#ha-io-progress-status').text('Verarbeite...');
+				$('#ha-io-current-action-title').text('Wird fortgesetzt...');
 				processNextChunk();
 			}
 		});
+
+		function setStep(stepNum) {
+			$('.ha-io-step').removeClass('active completed');
+			for (let i = 1; i < stepNum; i++) {
+				$('#ha-io-step-' + i).addClass('completed');
+			}
+			$('#ha-io-step-' + stepNum).addClass('active');
+		}
 
 		function startBulk() {
 			if (isRunning) return;
 			isRunning = true;
 			isPaused = false;
+			totalSavedBytes = 0;
 
 			$('#ha-io-btn-start-bulk, #ha-io-btn-start-bulk-all').prop('disabled', true);
 			$('#ha-io-btn-pause-bulk').show().text(ha_io_vars.i18n.pause || 'Pausieren');
-			$('#ha-io-progress-container, #ha-io-log-container').slideDown();
-			$('#ha-io-progress-bar').css('width', '0%');
-			$('#ha-io-progress-status').text('Ermittle Bild-Queue...');
-			$('#ha-io-log-list').empty();
+			
+			$('#ha-io-stepper').slideDown();
+			$('#ha-io-live-action-box').slideDown();
+			$('#ha-io-progress-container').slideDown();
+			$('#ha-io-history-dropdown').slideDown();
+			$('#ha-io-log-container').slideDown();
 
-			// Fetch queue
+			$('#ha-io-progress-bar').css('width', '0%');
+			$('#ha-io-history-tbody').empty();
+			$('#ha-io-history-count').text('0');
+
+			// Step 1: Crawl library
+			setStep(1);
+			$('#ha-io-current-action-title').text('Schritt 1: Mediathek scannen & Queue aufbauen...');
+			$('#ha-io-current-action-desc').text('Ermittle alle nicht optimierten Bilddateien aus der Datenbank...');
+			$('#ha-io-current-file-badge').hide();
+
+			appendLog('🔍 Starte Crawling der WordPress-Mediathek...');
+
 			$.ajax({
 				url: ha_io_vars.ajax_url,
 				method: 'POST',
@@ -139,11 +163,15 @@
 						bulkProcessed = 0;
 
 						if (bulkTotal === 0) {
-							$('#ha-io-progress-status').text('Keine Bilder zum Optimieren gefunden.');
+							setStep(4);
+							$('#ha-io-current-action-title').text('Bereits alles auf dem neuesten Stand!');
+							$('#ha-io-current-action-desc').text('Es wurden keine Bilder gefunden, die optimiert werden müssen.');
 							finishBulk();
 							return;
 						}
 
+						appendLog('✅ Queue erfolgreich erstellt: ' + bulkTotal + ' Bilder gefunden.');
+						setStep(2);
 						updateProgress();
 						processNextChunk();
 					} else {
@@ -168,6 +196,13 @@
 
 			const chunk = bulkQueue.splice(0, batchSize);
 
+			// Step 2 & 3: Optimizing
+			setStep(2);
+			$('#ha-io-current-action-title').text('Schritt 2: Optimiere Bilder (' + (bulkProcessed + 1) + ' bis ' + Math.min(bulkTotal, bulkProcessed + chunk.length) + ' von ' + bulkTotal + ')...');
+			$('#ha-io-current-action-desc').text('Komprimiere Originale verlustfrei und erzeuge Smart-Zwischengrößen...');
+			$('#ha-io-current-file-badge').show();
+			$('#ha-io-current-filename').text('IDs: ' + chunk.join(', '));
+
 			$.ajax({
 				url: ha_io_vars.ajax_url,
 				method: 'POST',
@@ -181,10 +216,25 @@
 					if (res.success) {
 						bulkProcessed += chunk.length;
 						const saved = res.data.saved_bytes || 0;
-						appendLog('Batch verarbeitet (' + chunk.length + ' Bilder). Gespart: ' + formatBytes(saved));
+						totalSavedBytes += saved;
+
+						// Step 3 NextGen visual pulse
+						setStep(3);
+
+						// Append each item into the history dropdown
+						if (res.data.items && res.data.items.length) {
+							res.data.items.forEach(function (item) {
+								appendHistoryRow(item);
+								$('#ha-io-current-filename').text(item.filename);
+							});
+						}
+
+						appendLog('Batch abgeschlossen (' + chunk.length + ' Bilder). Gespart: ' + formatBytes(saved));
 					} else {
 						appendLog('Fehler bei Batch (' + chunk.join(',') + '): ' + (res.data ? res.data.message : 'Unbekannt'));
+						bulkProcessed += chunk.length;
 					}
+
 					updateProgress();
 					processNextChunk();
 				},
@@ -197,21 +247,53 @@
 			});
 		}
 
+		function appendHistoryRow(item) {
+			const nextgenPills = [];
+			if (item.has_webp) {
+				nextgenPills.push('<span class="ha-io-badge ha-io-badge-blue">WebP ✅</span>');
+			}
+			if (item.has_avif) {
+				nextgenPills.push('<span class="ha-io-badge ha-io-badge-purple">AVIF ✅</span>');
+			}
+			if (!nextgenPills.length) {
+				nextgenPills.push('<span class="ha-io-badge ha-io-badge-gray">—</span>');
+			}
+
+			const rowHtml = '<tr class="ha-io-row-new">' +
+				'<td><strong>' + escapeHtml(item.filename) + '</strong></td>' +
+				'<td>' + escapeHtml(item.before) + '</td>' +
+				'<td>' + escapeHtml(item.after) + '</td>' +
+				'<td><span class="ha-io-text-green">-' + escapeHtml(item.percent) + '%</span> (' + escapeHtml(item.saved) + ')</td>' +
+				'<td>' + nextgenPills.join(' ') + '</td>' +
+				'</tr>';
+
+			const $tbody = $('#ha-io-history-tbody');
+			$tbody.prepend(rowHtml);
+
+			const currentCount = parseInt($('#ha-io-history-count').text() || '0', 10) + 1;
+			$('#ha-io-history-count').text(currentCount);
+		}
+
 		function updateProgress() {
 			const percent = bulkTotal > 0 ? Math.min(100, Math.round((bulkProcessed / bulkTotal) * 100)) : 100;
 			$('#ha-io-progress-bar').css('width', percent + '%');
 			$('#ha-io-progress-counts').text(bulkProcessed + ' / ' + bulkTotal + ' (' + percent + '%)');
-			$('#ha-io-progress-status').text('Verarbeite Bilder...');
+			$('#ha-io-progress-status').text('Fortschritt: ' + percent + '% (' + bulkProcessed + ' von ' + bulkTotal + ' Bildern)');
 		}
 
 		function finishBulk() {
 			isRunning = false;
 			isPaused = false;
+			setStep(4);
+
 			$('#ha-io-btn-pause-bulk').hide();
 			$('#ha-io-btn-start-bulk, #ha-io-btn-start-bulk-all').prop('disabled', false);
 			$('#ha-io-progress-bar').css('width', '100%');
-			$('#ha-io-progress-status').text(ha_io_vars.i18n.completed || 'Fertig!');
-			appendLog('🎉 Optimierung vollständig abgeschlossen.');
+			$('#ha-io-current-action-title').text('🎉 ' + (ha_io_vars.i18n.completed || 'Optimierung vollständig abgeschlossen!'));
+			$('#ha-io-current-action-desc').text('Insgesamt wurden ' + formatBytes(totalSavedBytes) + ' Speicherplatz auf dem Server gespart. Alle Caches wurden bereinigt.');
+			$('#ha-io-current-file-badge').hide();
+
+			appendLog('🏁 Massenoptimierung beendet. Insgesamt ' + formatBytes(totalSavedBytes) + ' gespart.');
 		}
 
 		function appendLog(text) {
@@ -226,6 +308,10 @@
 			const sizes = ['B', 'KB', 'MB', 'GB'];
 			const i = Math.floor(Math.log(bytes) / Math.log(k));
 			return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+		}
+
+		function escapeHtml(str) {
+			return $('<div>').text(str).html();
 		}
 	});
 })(jQuery);

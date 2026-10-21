@@ -7,21 +7,49 @@
 	margin-top: 20px;
 }
 
+/* Quick-Start Banner on Settings Page */
+.ha-io-quick-start-card {
+	background: linear-gradient(135deg, #1d2327 0%, #2271b1 100%);
+	color: #fff;
+	border-radius: 8px;
+	padding: 20px 24px;
+	margin-bottom: 24px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.ha-io-quick-start-text {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	font-size: 1.05rem;
+}
+
+.ha-io-btn-hero {
+	font-size: 1.05rem !important;
+	height: auto !important;
+	padding: 10px 22px !important;
+	border-radius: 6px !important;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
 /* Diagnostic & Content Cards */
 .ha-io-card {
 	background: #fff;
 	border: 1px solid #ccd0d4;
-	border-radius: 6px;
-	padding: 20px 24px;
+	border-radius: 8px;
+	padding: 24px 28px;
 	margin-bottom: 24px;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .ha-io-card h2 {
 	margin-top: 0;
-	padding-bottom: 12px;
+	padding-bottom: 14px;
 	border-bottom: 1px solid #f0f0f1;
-	font-size: 1.25rem;
+	font-size: 1.3rem;
 }
 
 .ha-io-card-diagnostic {
@@ -39,10 +67,10 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 10px 14px;
+	padding: 12px 16px;
 	background: #fff;
 	border: 1px solid #e2e4e7;
-	border-radius: 4px;
+	border-radius: 6px;
 }
 
 .ha-io-diag-label {
@@ -70,7 +98,7 @@
 	background: #fff;
 	border: 1px solid #ccd0d4;
 	border-left: 4px solid #2271b1;
-	border-radius: 4px;
+	border-radius: 6px;
 	padding: 18px 20px;
 	display: flex;
 	flex-direction: column;
@@ -94,6 +122,244 @@
 	font-weight: 500;
 }
 
+/* Visual Stepper Bar */
+.ha-io-stepper {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	padding: 16px 20px;
+	margin-bottom: 22px;
+}
+
+.ha-io-step {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	opacity: 0.45;
+	transition: all 0.3s ease;
+}
+
+.ha-io-step.active {
+	opacity: 1;
+	color: #2271b1;
+	font-weight: 700;
+}
+
+.ha-io-step.completed {
+	opacity: 0.9;
+	color: #008a20;
+}
+
+.ha-io-step-num {
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	background: #e2e4e7;
+	color: #50575e;
+	font-weight: 700;
+	font-size: 0.85rem;
+}
+
+.ha-io-step.active .ha-io-step-num {
+	background: #2271b1;
+	color: #fff;
+	box-shadow: 0 0 0 4px rgba(34, 113, 177, 0.2);
+}
+
+.ha-io-step.completed .ha-io-step-num {
+	background: #008a20;
+	color: #fff;
+}
+
+.ha-io-step-label {
+	font-size: 0.88rem;
+}
+
+.ha-io-step-connector {
+	flex: 1;
+	height: 2px;
+	background: #dcdcde;
+	margin: 0 12px;
+}
+
+/* Live Current Action Box */
+.ha-io-live-action-box {
+	background: #f0f6fc;
+	border: 1px solid #c8d8f0;
+	border-radius: 8px;
+	padding: 18px 20px;
+	margin-bottom: 20px;
+}
+
+.ha-io-live-action-header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.ha-io-pulse-indicator {
+	width: 14px;
+	height: 14px;
+	background: #2271b1;
+	border-radius: 50%;
+	display: inline-block;
+	box-shadow: 0 0 0 rgba(34, 113, 177, 0.4);
+	animation: ha-io-pulse 1.5s infinite;
+}
+
+@keyframes ha-io-pulse {
+	0% {
+		box-shadow: 0 0 0 0 rgba(34, 113, 177, 0.7);
+	}
+	70% {
+		box-shadow: 0 0 0 10px rgba(34, 113, 177, 0);
+	}
+	100% {
+		box-shadow: 0 0 0 0 rgba(34, 113, 177, 0);
+	}
+}
+
+.ha-io-pulse-dot {
+	width: 10px;
+	height: 10px;
+	background: #46b450;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+.ha-io-live-action-text-group {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.ha-io-live-title {
+	font-size: 1.05rem;
+	color: #1d2327;
+}
+
+.ha-io-live-desc {
+	font-size: 0.88rem;
+	color: #50575e;
+}
+
+.ha-io-current-file-badge {
+	margin-top: 12px;
+	padding-top: 10px;
+	border-top: 1px dashed #d0d7de;
+	font-size: 0.88rem;
+	color: #2c3338;
+}
+
+.ha-io-current-file-badge code {
+	background: #fff;
+	padding: 2px 8px;
+	border-radius: 4px;
+	border: 1px solid #d0d7de;
+	font-weight: 600;
+	color: #0969da;
+}
+
+/* Progress Bar */
+.ha-io-progress-bar-bg {
+	background: #e2e4e7;
+	border-radius: 10px;
+	height: 20px;
+	overflow: hidden;
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+	margin-bottom: 8px;
+}
+
+.ha-io-progress-bar-fill {
+	background: linear-gradient(90deg, #2271b1, #008a20);
+	height: 100%;
+	width: 0%;
+	border-radius: 10px;
+	transition: width 0.3s ease;
+}
+
+.ha-io-progress-info {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: #2c3338;
+	margin-bottom: 24px;
+}
+
+/* Collapsible History Dropdown */
+.ha-io-history-dropdown {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	margin-bottom: 20px;
+	overflow: hidden;
+}
+
+.ha-io-history-summary {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 14px 18px;
+	background: #f6f7f7;
+	cursor: pointer;
+	user-select: none;
+	font-size: 0.95rem;
+	border-bottom: 1px solid transparent;
+}
+
+.ha-io-history-dropdown[open] .ha-io-history-summary {
+	border-bottom-color: #dcdcde;
+}
+
+.ha-io-history-summary-left {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.ha-io-history-arrow {
+	font-size: 0.9rem;
+	color: #646970;
+	transition: transform 0.2s ease;
+}
+
+.ha-io-history-dropdown[open] .ha-io-history-arrow {
+	transform: rotate(180deg);
+}
+
+.ha-io-history-content {
+	max-height: 320px;
+	overflow-y: auto;
+}
+
+.ha-io-history-table {
+	margin: 0 !important;
+	border: none !important;
+}
+
+.ha-io-history-table th {
+	background: #fcfcfd;
+	position: sticky;
+	top: 0;
+	z-index: 2;
+}
+
+.ha-io-row-new {
+	animation: ha-io-fade-in 0.4s ease-out;
+}
+
+@keyframes ha-io-fade-in {
+	from { background-color: #edfaef; }
+	to { background-color: transparent; }
+}
+
 /* Badges */
 .ha-io-badge {
 	display: inline-block;
@@ -111,37 +377,12 @@
 .ha-io-badge-purple { background: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
 .ha-io-badge-engine { background: #f0f4f8; color: #2c3338; font-size: 0.75rem; margin-inline-start: 8px; }
 
-/* Progress Bar */
-.ha-io-progress-bar-bg {
-	background: #e2e4e7;
-	border-radius: 8px;
-	height: 18px;
-	overflow: hidden;
-	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.ha-io-progress-bar-fill {
-	background: linear-gradient(90deg, #2271b1, #008a20);
-	height: 100%;
-	width: 0%;
-	transition: width 0.3s ease;
-}
-
-.ha-io-progress-info {
-	display: flex;
-	justify-content: space-between;
-	font-size: 0.9rem;
-	margin-top: 8px;
-	font-weight: 600;
-	color: #2c3338;
-}
-
-/* Meta Card & Table */
+/* Meta Card & Table in Media modal */
 .ha-io-meta-card {
-	padding: 12px 14px;
+	padding: 14px 16px;
 	background: #fcfcfd;
 	border: 1px solid #dcdcde;
-	border-radius: 4px;
+	border-radius: 6px;
 	margin-top: 8px;
 }
 
@@ -165,8 +406,8 @@
 .ha-io-pill {
 	display: inline-block;
 	background: #f0f0f1;
-	border-radius: 3px;
-	padding: 1px 6px;
+	border-radius: 4px;
+	padding: 2px 6px;
 	font-size: 0.75rem;
 	margin-inline-end: 4px;
 }
@@ -179,14 +420,14 @@
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	margin-top: 10px;
+	margin-top: 12px;
 }
 
 .ha-io-code-block {
 	background: #282c34;
 	color: #abb2bf;
 	padding: 14px 18px;
-	border-radius: 4px;
+	border-radius: 6px;
 	overflow-x: auto;
 	font-family: Consolas, Monaco, monospace;
 	font-size: 0.85rem;
@@ -197,10 +438,10 @@
 	overflow-y: auto;
 	background: #f6f7f7;
 	border: 1px solid #dcdcde;
-	border-radius: 4px;
+	border-radius: 6px;
 	padding: 10px 14px;
 	font-size: 0.85rem;
-	margin: 0;
+	margin: 8px 0 0 0;
 }
 
 .ha-io-log-list li {
