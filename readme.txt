@@ -5,7 +5,7 @@ Tags: image optimizer, webp, avif, compression, performance, media library
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.0.1
+Stable tag: 1.1.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -41,6 +41,13 @@ Nein. Das Plugin arbeitet zu 100% lokal auf deinem Webserver über PHP Imagick o
 Gemäß den HA-Standards werden deine Backups und WebP-Dateien standardmäßig geschützt und nicht gelöscht. In den Einstellungen gibt es einen expliziten Schalter für die vollständige Bereinigung bei Deinstallation.
 
 == Changelog ==
+
+= 1.1.0 =
+* Neu: Theme- und benutzerdefinierte Verzeichnisse scannen und optimieren (inkl. WebP & AVIF Erzeugung).
+* Neu: Frontend ContentFilter unterstützt nun Theme-Assets und benutzerdefinierte Verzeichnisse für <picture>-Tags und CSS image-set().
+* Neu: WP-CLI Befehle `wp ha-optimizer optimize-custom` und `wp ha-optimizer restore-custom`.
+* Neu: Automatisierte GitHub Actions CI Pipeline mit PHP 8.1 - 8.4 Matrix und Standalone-Test-Suite.
+* Neu: Automatisierte GitHub Actions Packaging & Release-Action zum Bereitstellen des Installations-ZIPs direkt im Repository.
 
 = 1.0.1 =
 * Neu: Schnellzugriffs-Links direkt in der Plugin-Verwaltung (wp-admin/plugins.php).

@@ -42,6 +42,8 @@ class Settings {
 			'max_height'                   => 2560,
 			'convert_non_transparent_png'  => false,
 			'keep_exif'                    => false,
+			'optimize_custom_folders'      => true,
+			'custom_folders'               => 'themes',
 		];
 	}
 
@@ -126,6 +128,32 @@ class Settings {
 		$max_h = isset( $input['max_height'] ) ? absint( $input['max_height'] ) : $defaults['max_height'];
 		$clean['max_height'] = ( $max_h >= 300 && $max_h <= 10000 ) ? $max_h : 2560;
 
+		// Custom Folders
+		$clean['optimize_custom_folders'] = ! empty( $input['optimize_custom_folders'] );
+		$raw_folders                      = (string) ( $input['custom_folders'] ?? $defaults['custom_folders'] );
+		$clean_folders                    = [];
+		$lines                            = explode( "\n", str_replace( "\r", '', $raw_folders ) );
+
+		foreach ( $lines as $line ) {
+			$folder = trim( str_replace( '\\', '/', $line ) );
+			$folder = trim( $folder, '/' );
+
+			// Security: skip empty lines or directory traversal attempts
+			if ( empty( $folder ) || str_contains( $folder, '..' ) ) {
+				continue;
+			}
+
+			// Disallow protected internal paths
+			if ( str_starts_with( $folder, 'ha-backups' ) ) {
+				continue;
+			}
+
+			$clean_folders[] = sanitize_text_field( $folder );
+		}
+
+		$clean['custom_folders'] = implode( "\n", array_unique( $clean_folders ) );
+
 		return $clean;
 	}
 }
+

@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div class="ha-io-stats-overview">
 		<div class="ha-io-stat-box">
 			<span class="ha-io-stat-number" id="ha-io-stat-total"><?php echo esc_html( $stats['total_images'] ); ?></span>
-			<span class="ha-io-stat-label"><?php esc_html_e( 'Bilder Gesamt', 'ha-image-optimizer' ); ?></span>
+			<span class="ha-io-stat-label"><?php esc_html_e( 'Mediathek Gesamt', 'ha-image-optimizer' ); ?></span>
 		</div>
 		<div class="ha-io-stat-box ha-io-stat-box-green">
 			<span class="ha-io-stat-number" id="ha-io-stat-optimized"><?php echo esc_html( $stats['optimized_images'] ); ?></span>
@@ -37,23 +37,33 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</div>
 	</div>
 
+	<?php if ( ! empty( $custom_stats['total_images'] ) ) : ?>
+		<div class="ha-io-custom-stats-bar">
+			<span class="ha-io-badge ha-io-badge-purple">🎨 <?php esc_html_e( 'Theme- & Benutzerdefinierte Ordner:', 'ha-image-optimizer' ); ?></span>
+			<strong><?php echo esc_html( $custom_stats['total_images'] ); ?></strong> <?php esc_html_e( 'Dateien gefunden', 'ha-image-optimizer' ); ?> &bull;
+			<strong><?php echo esc_html( $custom_stats['optimized_images'] ); ?></strong> <?php esc_html_e( 'optimiert', 'ha-image-optimizer' ); ?> &bull;
+			<strong><?php echo esc_html( $custom_stats['unoptimized'] ); ?></strong> <?php esc_html_e( 'noch offen', 'ha-image-optimizer' ); ?> &bull;
+			<strong><?php echo esc_html( size_format( $custom_stats['saved_bytes'] ) ); ?></strong> <?php esc_html_e( 'gespart', 'ha-image-optimizer' ); ?>
+		</div>
+	<?php endif; ?>
+
 	<!-- Main Execution Card -->
 	<div class="ha-io-card ha-io-bulk-card">
 		<h2>🚀 <?php esc_html_e( 'Massenverarbeitung starten', 'ha-image-optimizer' ); ?></h2>
 		<p>
-			<?php esc_html_e( 'Die Massenoptimierung verarbeitet deine gesamte Mediathek lokal im Hintergrund. Für jedes Bild wird das Original verlustfrei optimiert, alle Zwischengrößen komprimiert und moderne WebP/AVIF-Versionen erzeugt.', 'ha-image-optimizer' ); ?>
+			<?php esc_html_e( 'Die Massenoptimierung verarbeitet deine gesamte Mediathek oder statische Theme-Bilder lokal im Hintergrund. Für jedes Bild wird das Original verlustfrei optimiert, alle Zwischengrößen komprimiert und moderne WebP/AVIF-Versionen erzeugt.', 'ha-image-optimizer' ); ?>
 		</p>
 
 		<!-- Visual Stepper Bar -->
 		<div class="ha-io-stepper" id="ha-io-stepper">
 			<div class="ha-io-step" id="ha-io-step-1">
 				<span class="ha-io-step-num">1</span>
-				<span class="ha-io-step-label"><?php esc_html_e( 'Mediathek scannen', 'ha-image-optimizer' ); ?></span>
+				<span class="ha-io-step-label"><?php esc_html_e( 'Dateien scannen', 'ha-image-optimizer' ); ?></span>
 			</div>
 			<div class="ha-io-step-connector"></div>
 			<div class="ha-io-step" id="ha-io-step-2">
 				<span class="ha-io-step-num">2</span>
-				<span class="ha-io-step-label"><?php esc_html_e( 'Original & Sub-Sizes optimieren', 'ha-image-optimizer' ); ?></span>
+				<span class="ha-io-step-label"><?php esc_html_e( 'Original komprimieren', 'ha-image-optimizer' ); ?></span>
 			</div>
 			<div class="ha-io-step-connector"></div>
 			<div class="ha-io-step" id="ha-io-step-3">
@@ -70,11 +80,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<!-- Action Buttons -->
 		<div class="ha-io-bulk-actions">
 			<button type="button" class="button button-primary button-hero ha-io-btn-hero" id="ha-io-btn-start-bulk" <?php disabled( 0 === $stats['unoptimized'] ); ?>>
-				⚡ <?php esc_html_e( 'Unoptimierte Bilder jetzt verarbeiten', 'ha-image-optimizer' ); ?>
+				⚡ <?php esc_html_e( 'Mediathek optimieren', 'ha-image-optimizer' ); ?>
 			</button>
 
+			<?php if ( ! empty( $custom_stats['total_images'] ) ) : ?>
+				<button type="button" class="button button-primary ha-io-btn-hero" id="ha-io-btn-start-custom" <?php disabled( 0 === $custom_stats['unoptimized'] ); ?>>
+					🎨 <?php esc_html_e( 'Theme-Ordner optimieren', 'ha-image-optimizer' ); ?> (<?php echo esc_html( $custom_stats['unoptimized'] ); ?>)
+				</button>
+			<?php endif; ?>
+
 			<button type="button" class="button button-secondary" id="ha-io-btn-start-bulk-all">
-				🔄 <?php esc_html_e( 'Alle Bilder erneut optimieren (Force All)', 'ha-image-optimizer' ); ?>
+				🔄 <?php esc_html_e( 'Mediathek Force All', 'ha-image-optimizer' ); ?>
 			</button>
 
 			<button type="button" class="button" id="ha-io-btn-pause-bulk" style="display: none;">

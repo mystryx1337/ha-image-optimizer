@@ -196,4 +196,100 @@ class BackupManager {
 			}
 		}
 	}
+
+	/**
+	 * Calculate backup path for a custom file inside WP_CONTENT_DIR.
+	 *
+	 * @param string $source_path Absolute file path.
+	 * @return string Backup path.
+	 */
+	public static function get_custom_backup_file_path( string $source_path ): string {
+		$content_dir     = defined( 'WP_CONTENT_DIR' ) ? WP_CONTENT_DIR : ABSPATH . 'wp-content';
+		$normalized_base = trailingslashit( wp_normalize_path( $content_dir ) );
+		$normalized_src  = wp_normalize_path( $source_path );
+
+		$relative = str_replace( $normalized_base, '', $normalized_src );
+		$relative = ltrim( $relative, '/\\' );
+
+		return trailingslashit( self::get_backup_dir() ) . 'custom/' . $relative;
+	}
+
+	/**
+	 * Backup a custom file before optimization.
+	 *
+	 * @param string $source_path Absolute path.
+	 * @return bool
+	 */
+	public static function backup_custom( string $source_path ): bool {
+		if ( ! file_exists( $source_path ) ) {
+			return false;
+		}
+
+		$backup_path = self::get_custom_backup_file_path( $source_path );
+		if ( file_exists( $backup_path ) ) {
+			return true;
+		}
+
+		$target_dir = dirname( $backup_path );
+		if ( ! file_exists( $target_dir ) ) {
+			wp_mkdir_p( $target_dir );
+		}
+
+		return (bool) @copy( $source_path, $backup_path );
+	}
+
+	/**
+	 * Check if a custom file has a backup.
+	 *
+	 * @param string $source_path Absolute path.
+	 * @return bool
+	 */
+	public static function has_custom_backup( string $source_path ): bool {
+		$backup_path = self::get_custom_backup_file_path( $source_path );
+		return file_exists( $backup_path );
+	}
+
+	/**
+	 * Restore a custom file from backup.
+	 *
+	 * @param string $source_path Absolute path.
+	 * @return bool
+	 */
+	public static function restore_custom( string $source_path ): bool {
+		$backup_path = self::get_custom_backup_file_path( $source_path );
+		if ( ! file_exists( $backup_path ) ) {
+			return false;
+		}
+
+		if ( ! @copy( $backup_path, $source_path ) ) {
+			return false;
+		}
+
+		self::clean_custom_nextgen( $source_path );
+		@unlink( $backup_path );
+
+		return true;
+	}
+
+	/**
+	 * Clean next-gen .webp and .avif files for a custom file.
+	 *
+	 * @param string $source_path Absolute path.
+	 * @return void
+	 */
+	public static function clean_custom_nextgen( string $source_path ): void {
+		$candidates = [
+			$source_path . '.webp',
+			preg_replace( '/\.[^.]+$/', '.webp', $source_path ),
+			$source_path . '.avif',
+			preg_replace( '/\.[^.]+$/', '.avif', $source_path ),
+		];
+
+		foreach ( array_unique( $candidates ) as $candidate ) {
+			if ( $candidate && file_exists( $candidate ) && $candidate !== $source_path ) {
+				@unlink( $candidate );
+			}
+		}
+	}
 }
+

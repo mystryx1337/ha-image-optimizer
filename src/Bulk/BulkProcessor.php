@@ -8,6 +8,7 @@
 namespace ha\ImageOptimizer\Bulk;
 
 use ha\ImageOptimizer\Media\AttachmentProcessor;
+use ha\ImageOptimizer\Media\CustomFolderProcessor;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -79,4 +80,60 @@ class BulkProcessor {
 			'errors'      => $errors,
 		];
 	}
+
+	/**
+	 * Process a batch of relative custom folder file paths.
+	 *
+	 * @param array<string> $relative_paths Array of relative file paths.
+	 * @param bool          $force Whether to force re-optimization.
+	 * @return array<string, mixed> Result summary.
+	 */
+	public static function process_custom_batch( array $relative_paths, bool $force = false ): array {
+		$processed   = 0;
+		$saved_bytes = 0;
+		$errors      = [];
+		$items       = [];
+
+		foreach ( $relative_paths as $rel_path ) {
+			$rel_path = trim( sanitize_text_field( (string) $rel_path ) );
+			if ( empty( $rel_path ) ) {
+				continue;
+			}
+
+			try {
+				$item    = CustomFolderProcessor::process_file( $rel_path, $force );
+				$saved_b = (int) ( $item['saved'] ?? 0 );
+
+				if ( $saved_b > 0 ) {
+					$saved_bytes += $saved_b;
+				}
+
+				$items[] = [
+					'id'       => $rel_path,
+					'filename' => $item['filename'] ?? wp_basename( $rel_path ),
+					'before'   => size_format( (int) ( $item['before'] ?? 0 ) ),
+					'after'    => size_format( (int) ( $item['after'] ?? 0 ) ),
+					'saved'    => size_format( $saved_b ),
+					'percent'  => number_format_i18n( (float) ( $item['percent'] ?? 0.0 ), 1 ),
+					'has_webp' => ! empty( $item['has_webp'] ),
+					'has_avif' => ! empty( $item['has_avif'] ),
+				];
+
+				$processed++;
+			} catch ( \Throwable $e ) {
+				$errors[] = [
+					'id'      => $rel_path,
+					'message' => $e->getMessage(),
+				];
+			}
+		}
+
+		return [
+			'processed'   => $processed,
+			'saved_bytes' => $saved_bytes,
+			'items'       => $items,
+			'errors'      => $errors,
+		];
+	}
 }
+

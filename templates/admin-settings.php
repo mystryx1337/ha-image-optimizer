@@ -252,6 +252,29 @@ $delete_data_on_uninstall = (bool) get_option( 'ha_io_delete_data_on_uninstall',
 						</fieldset>
 					</td>
 				</tr>
+
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Theme- & Benutzerdefinierte Ordner', 'ha-image-optimizer' ); ?></th>
+					<td>
+						<fieldset>
+							<label>
+								<input type="checkbox" name="ha_io_settings[optimize_custom_folders]" value="1" <?php checked( $settings['optimize_custom_folders'] ); ?>>
+								<strong><?php esc_html_e( 'Bilder außerhalb der Mediathek scannen und optimieren', 'ha-image-optimizer' ); ?></strong>
+							</label>
+							<p class="description">
+								<?php esc_html_e( 'Findet statische Bilddateien in Theme-Ordnern oder benutzerdefinierten Verzeichnissen, komprimiert diese und generiert WebP/AVIF-Dateien.', 'ha-image-optimizer' ); ?>
+							</p>
+							<br>
+							<label for="ha-io-custom-folders">
+								<strong><?php esc_html_e( 'Zu durchsuchende Verzeichnisse (eine Zeile pro Pfad, relativ zu wp-content):', 'ha-image-optimizer' ); ?></strong>
+							</label>
+							<textarea id="ha-io-custom-folders" name="ha_io_settings[custom_folders]" rows="3" class="large-text code"><?php echo esc_textarea( $settings['custom_folders'] ); ?></textarea>
+							<p class="description">
+								<?php esc_html_e( 'Standard: themes. Beispiel: themes oder uploads/custom-folder', 'ha-image-optimizer' ); ?>
+							</p>
+						</fieldset>
+					</td>
+				</tr>
 			</table>
 		</div>
 

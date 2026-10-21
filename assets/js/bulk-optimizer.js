@@ -87,15 +87,24 @@
 		let isPaused = false;
 		let isRunning = false;
 		let forceAll = false;
+		let bulkTarget = 'media'; // 'media' or 'custom'
 		const batchSize = 2; // Process 2 images per request to prevent PHP memory limits/timeouts
 
 		$('#ha-io-btn-start-bulk').on('click', function () {
 			forceAll = false;
+			bulkTarget = 'media';
 			startBulk();
 		});
 
 		$('#ha-io-btn-start-bulk-all').on('click', function () {
 			forceAll = true;
+			bulkTarget = 'media';
+			startBulk();
+		});
+
+		$('#ha-io-btn-start-custom').on('click', function () {
+			forceAll = false;
+			bulkTarget = 'custom';
 			startBulk();
 		});
 
@@ -127,7 +136,7 @@
 			isPaused = false;
 			totalSavedBytes = 0;
 
-			$('#ha-io-btn-start-bulk, #ha-io-btn-start-bulk-all').prop('disabled', true);
+			$('#ha-io-btn-start-bulk, #ha-io-btn-start-bulk-all, #ha-io-btn-start-custom').prop('disabled', true);
 			$('#ha-io-btn-pause-bulk').show().text(ha_io_vars.i18n.pause || 'Pausieren');
 			
 			$('#ha-io-stepper').slideDown();
@@ -140,19 +149,29 @@
 			$('#ha-io-history-tbody').empty();
 			$('#ha-io-history-count').text('0');
 
-			// Step 1: Crawl library
+			// Step 1: Crawl library or custom folders
 			setStep(1);
-			$('#ha-io-current-action-title').text('Schritt 1: Mediathek scannen & Queue aufbauen...');
-			$('#ha-io-current-action-desc').text('Ermittle alle nicht optimierten Bilddateien aus der Datenbank...');
+			const isCustom = (bulkTarget === 'custom');
+			const step1Title = isCustom
+				? 'Schritt 1: Theme- & Custom-Ordner scannen...'
+				: 'Schritt 1: Mediathek scannen & Queue aufbauen...';
+			const step1Desc = isCustom
+				? 'Ermittle alle nicht optimierten Bilddateien in den konfigurierten Ordnern...'
+				: 'Ermittle alle nicht optimierten Bilddateien aus der Datenbank...';
+
+			$('#ha-io-current-action-title').text(step1Title);
+			$('#ha-io-current-action-desc').text(step1Desc);
 			$('#ha-io-current-file-badge').hide();
 
-			appendLog('🔍 Starte Crawling der WordPress-Mediathek...');
+			appendLog(isCustom ? '🔍 Starte Scannen von Theme- und benutzerdefinierten Verzeichnissen...' : '🔍 Starte Crawling der WordPress-Mediathek...');
+
+			const queueAction = isCustom ? 'ha_io_get_custom_queue' : 'ha_io_get_bulk_queue';
 
 			$.ajax({
 				url: ha_io_vars.ajax_url,
 				method: 'POST',
 				data: {
-					action: 'ha_io_get_bulk_queue',
+					action: queueAction,
 					nonce: ha_io_vars.nonce,
 					all: forceAll ? 1 : 0
 				},
@@ -170,7 +189,7 @@
 							return;
 						}
 
-						appendLog('✅ Queue erfolgreich erstellt: ' + bulkTotal + ' Bilder gefunden.');
+						appendLog('✅ Queue erfolgreich erstellt: ' + bulkTotal + ' Dateien gefunden.');
 						setStep(2);
 						updateProgress();
 						processNextChunk();
@@ -195,23 +214,32 @@
 			}
 
 			const chunk = bulkQueue.splice(0, batchSize);
+			const isCustom = (bulkTarget === 'custom');
 
 			// Step 2 & 3: Optimizing
 			setStep(2);
 			$('#ha-io-current-action-title').text('Schritt 2: Optimiere Bilder (' + (bulkProcessed + 1) + ' bis ' + Math.min(bulkTotal, bulkProcessed + chunk.length) + ' von ' + bulkTotal + ')...');
 			$('#ha-io-current-action-desc').text('Komprimiere Originale verlustfrei und erzeuge Smart-Zwischengrößen...');
 			$('#ha-io-current-file-badge').show();
-			$('#ha-io-current-filename').text('IDs: ' + chunk.join(', '));
+			$('#ha-io-current-filename').text(chunk.join(', '));
+
+			const batchAction = isCustom ? 'ha_io_bulk_custom_batch' : 'ha_io_bulk_batch';
+			const postData = {
+				action: batchAction,
+				nonce: ha_io_vars.nonce,
+				force: forceAll ? 1 : 0
+			};
+
+			if (isCustom) {
+				postData.files = chunk;
+			} else {
+				postData.ids = chunk;
+			}
 
 			$.ajax({
 				url: ha_io_vars.ajax_url,
 				method: 'POST',
-				data: {
-					action: 'ha_io_bulk_batch',
-					nonce: ha_io_vars.nonce,
-					ids: chunk,
-					force: forceAll ? 1 : 0
-				},
+				data: postData,
 				success: function (res) {
 					if (res.success) {
 						bulkProcessed += chunk.length;
@@ -229,7 +257,7 @@
 							});
 						}
 
-						appendLog('Batch abgeschlossen (' + chunk.length + ' Bilder). Gespart: ' + formatBytes(saved));
+						appendLog('Batch abgeschlossen (' + chunk.length + ' Dateien). Gespart: ' + formatBytes(saved));
 					} else {
 						appendLog('Fehler bei Batch (' + chunk.join(',') + '): ' + (res.data ? res.data.message : 'Unbekannt'));
 						bulkProcessed += chunk.length;

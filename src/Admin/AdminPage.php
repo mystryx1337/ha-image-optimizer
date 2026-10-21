@@ -10,6 +10,7 @@ namespace ha\ImageOptimizer\Admin;
 use ha\ImageOptimizer\Common\Settings;
 use ha\ImageOptimizer\Common\Environment;
 use ha\ImageOptimizer\Bulk\ProgressTracker;
+use ha\ImageOptimizer\Media\CustomFolderProcessor;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -147,9 +148,10 @@ class AdminPage {
 			wp_die( esc_html__( 'Keine Berechtigung.', 'ha-image-optimizer' ) );
 		}
 
-		$settings = Settings::get_all();
-		$caps     = Environment::get_capabilities();
-		$stats    = ProgressTracker::get_stats();
+		$settings     = Settings::get_all();
+		$caps         = Environment::get_capabilities();
+		$stats        = ProgressTracker::get_stats();
+		$custom_stats = CustomFolderProcessor::get_stats();
 
 		$template_path = HA_IO_PATH . 'templates/admin-settings.php';
 		if ( file_exists( $template_path ) ) {
@@ -167,7 +169,8 @@ class AdminPage {
 			wp_die( esc_html__( 'Keine Berechtigung.', 'ha-image-optimizer' ) );
 		}
 
-		$stats = ProgressTracker::get_stats();
+		$stats        = ProgressTracker::get_stats();
+		$custom_stats = CustomFolderProcessor::get_stats();
 
 		$template_path = HA_IO_PATH . 'templates/bulk-optimizer-page.php';
 		if ( file_exists( $template_path ) ) {

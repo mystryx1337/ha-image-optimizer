@@ -1,0 +1,104 @@
+name: Package & Release ZIP
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (simulate packaging without creating a GitHub release)'
+        required: false
+        default: false
+        type: boolean
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: release-ha-image-optimizer
+  cancel-in-progress: false
+
+jobs:
+  quality-gate:
+    name: Pre-Release Quality Gate
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Build & Package Release ZIP
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine Target Version
+        id: get_version
+        run: |
+          VERSION=$(grep -i "Stable tag:" readme.txt | head -n 1 | sed -e 's/.*:[[:space:]]*//' | tr -d '\r\n ')
+          PHP_VERSION=$(grep -i "Version:" ha-image-optimizer.php | head -n 1 | sed -e 's/.*:[[:space:]]*//' | tr -d '\r\n ')
+
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not determine Stable tag from readme.txt"
+            exit 1
+          fi
+
+          if [ "$VERSION" != "$PHP_VERSION" ]; then
+            echo "::error::Version mismatch: readme.txt ($VERSION) vs ha-image-optimizer.php ($PHP_VERSION)"
+            exit 1
+          fi
+
+          echo "Target Version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build Clean Plugin Distribution ZIP
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          mkdir -p build/ha-image-optimizer
+
+          # Copy plugin files excluding development & CI files
+          rsync -av \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='tests' \
+            --exclude='.gitignore' \
+            --exclude='.gitattributes' \
+            --exclude='.editorconfig' \
+            --exclude='build' \
+            ./ build/ha-image-optimizer/
+
+          cd build
+          zip -r ../ha-image-optimizer.zip ha-image-optimizer
+          zip -r "../ha-image-optimizer-${VERSION}.zip" ha-image-optimizer
+          cd ..
+
+          ls -lh ha-image-optimizer.zip "ha-image-optimizer-${VERSION}.zip"
+
+      - name: Upload Build Artifact to Workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: ha-image-optimizer-v${{ steps.get_version.outputs.version }}
+          path: |
+            ha-image-optimizer.zip
+            ha-image-optimizer-${{ steps.get_version.outputs.version }}.zip
+          if-no-files-found: error
+
+      - name: Publish GitHub Release Asset
+        if: ${{ !(github.event.inputs.dry_run == 'true' || github.event.inputs.dry_run == true) }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          TAG="v${VERSION}"
+          
+          # Check if release exists; if not, create it
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG exists. Uploading assets..."
+            gh release upload "$TAG" ha-image-optimizer.zip "ha-image-optimizer-${VERSION}.zip" --clobber
+          else
+            echo "Creating release $TAG..."
+            gh release create "$TAG" ha-image-optimizer.zip "ha-image-optimizer-${VERSION}.zip" \
+              --title "v${VERSION}" \
+              --generate-notes
+          fi

@@ -76,17 +76,11 @@ class ContentFilter {
 
 		$src = $src_matches[1];
 
-		// Check if image is an upload from this site
-		$upload_dir = wp_upload_dir();
-		$base_url   = $upload_dir['baseurl'];
-		$base_dir   = $upload_dir['basedir'];
-
-		if ( ! str_starts_with( $src, $base_url ) ) {
-			return $img_tag; // External image or not in uploads
+		// Calculate local disk path (supports uploads and custom theme folders)
+		$local_path = self::resolve_local_path( $src );
+		if ( ! $local_path || ! file_exists( $local_path ) ) {
+			return $img_tag;
 		}
-
-		// Calculate local disk path
-		$local_path = str_replace( $base_url, $base_dir, $src );
 
 		$has_avif = file_exists( $local_path . '.avif' );
 		$has_webp = file_exists( $local_path . '.webp' );
@@ -111,7 +105,7 @@ class ContentFilter {
 
 		// AVIF source
 		if ( $has_avif ) {
-			$avif_srcset = self::convert_srcset( $srcset, '.avif', $base_url, $base_dir );
+			$avif_srcset = self::convert_srcset( $srcset, '.avif' );
 			if ( empty( $avif_srcset ) ) {
 				$avif_srcset = esc_url( $src . '.avif' );
 			}
@@ -120,7 +114,7 @@ class ContentFilter {
 
 		// WebP source
 		if ( $has_webp ) {
-			$webp_srcset = self::convert_srcset( $srcset, '.webp', $base_url, $base_dir );
+			$webp_srcset = self::convert_srcset( $srcset, '.webp' );
 			if ( empty( $webp_srcset ) ) {
 				$webp_srcset = esc_url( $src . '.webp' );
 			}
@@ -133,20 +127,44 @@ class ContentFilter {
 	}
 
 	/**
+	 * Map a site URL to its absolute local file path on disk.
+	 * Supports both wp-content/uploads and wp-content/themes/custom folders.
+	 *
+	 * @param string $url URL to check.
+	 * @return string|null Absolute file path or null if external.
+	 */
+	public static function resolve_local_path( string $url ): ?string {
+		$upload_dir      = wp_upload_dir();
+		$upload_url      = $upload_dir['baseurl'];
+		$upload_dir_path = $upload_dir['basedir'];
+
+		if ( str_starts_with( $url, $upload_url ) ) {
+			return str_replace( $upload_url, $upload_dir_path, $url );
+		}
+
+		$content_url = content_url();
+		$content_dir = defined( 'WP_CONTENT_DIR' ) ? WP_CONTENT_DIR : ABSPATH . 'wp-content';
+
+		if ( str_starts_with( $url, $content_url ) ) {
+			return str_replace( $content_url, $content_dir, $url );
+		}
+
+		return null;
+	}
+
+	/**
 	 * Convert an existing srcset string to use .webp or .avif suffixes for matching existing files.
 	 *
 	 * @param string $srcset Original srcset.
 	 * @param string $ext Extension suffix (e.g. '.webp' or '.avif').
-	 * @param string $base_url Base upload URL.
-	 * @param string $base_dir Base upload directory.
 	 * @return string Converted srcset.
 	 */
-	private static function convert_srcset( string $srcset, string $ext, string $base_url, string $base_dir ): string {
+	private static function convert_srcset( string $srcset, string $ext ): string {
 		if ( empty( $srcset ) ) {
 			return '';
 		}
 
-		$entries = explode( ',', $srcset );
+		$entries   = explode( ',', $srcset );
 		$converted = [];
 
 		foreach ( $entries as $entry ) {
@@ -160,15 +178,13 @@ class ContentFilter {
 				continue;
 			}
 
-			$url = $parts[0];
+			$url        = $parts[0];
 			$descriptor = $parts[1] ?? '';
 
-			if ( str_starts_with( $url, $base_url ) ) {
-				$local_path = str_replace( $base_url, $base_dir, $url );
-				if ( file_exists( $local_path . $ext ) ) {
-					$converted[] = esc_url( $url . $ext ) . ( $descriptor ? ' ' . $descriptor : '' );
-					continue;
-				}
+			$local_path = self::resolve_local_path( $url );
+			if ( $local_path && file_exists( $local_path . $ext ) ) {
+				$converted[] = esc_url( $url . $ext ) . ( $descriptor ? ' ' . $descriptor : '' );
+				continue;
 			}
 
 			$converted[] = $entry;
@@ -188,17 +204,13 @@ class ContentFilter {
 		$style_body = $matches[1];
 		$img_url    = $matches[2];
 
-		$upload_dir = wp_upload_dir();
-		$base_url   = $upload_dir['baseurl'];
-		$base_dir   = $upload_dir['basedir'];
-
-		if ( ! str_starts_with( $img_url, $base_url ) ) {
+		$local_path = self::resolve_local_path( $img_url );
+		if ( ! $local_path || ! file_exists( $local_path ) ) {
 			return $full_style;
 		}
 
-		$local_path = str_replace( $base_url, $base_dir, $img_url );
-		$has_webp   = file_exists( $local_path . '.webp' );
-		$has_avif   = file_exists( $local_path . '.avif' );
+		$has_webp = file_exists( $local_path . '.webp' );
+		$has_avif = file_exists( $local_path . '.avif' );
 
 		if ( ! $has_webp && ! $has_avif ) {
 			return $full_style;
@@ -224,3 +236,4 @@ class ContentFilter {
 		return 'style="' . esc_attr( $enhanced_style ) . '"';
 	}
 }
+
