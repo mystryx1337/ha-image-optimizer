@@ -210,7 +210,12 @@ class GdDriver implements OptimizerInterface {
 		imagesavealpha( $image, true );
 
 		$temp_file = $target_path . '.tmp.' . wp_generate_password( 6, false );
-		$result    = imageavif( $image, $temp_file, $quality );
+		try {
+			// In PHP 8.1+, imageavif accepts $speed (0 slowest, 10 fastest; 6 is optimal for web servers)
+			$result = @imageavif( $image, $temp_file, $quality, 6 );
+		} catch ( \ArgumentCountError ) {
+			$result = @imageavif( $image, $temp_file, $quality );
+		}
 		imagedestroy( $image );
 
 		if ( ! $result || ! file_exists( $temp_file ) ) {

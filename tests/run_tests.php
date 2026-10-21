@@ -147,6 +147,12 @@ namespace {
 		}
 	}
 
+	if ( ! function_exists( 'esc_sql' ) ) {
+		function esc_sql( $data ) {
+			return is_string( $data ) ? addslashes( $data ) : $data;
+		}
+	}
+
 	if ( ! function_exists( '__' ) ) {
 		function __( $text, $domain = 'default' ): string {
 			return (string) $text;
@@ -297,6 +303,35 @@ namespace {
 			return true;
 		}
 	}
+
+	class MockWpdb {
+		public string $posts    = 'wp_posts';
+		public string $postmeta = 'wp_postmeta';
+
+		public function get_var( $query ) {
+			return 10;
+		}
+
+		public function get_results( $query ) {
+			return [
+				(object) [
+					'post_id'    => 1,
+					'meta_value' => serialize( [
+						'total' => [ 'before' => 100000, 'after' => 60000, 'saved' => 40000, 'percent' => 40.0 ],
+					] ),
+				],
+			];
+		}
+
+		public function get_col( $query ) {
+			return [ 1, 2, 3 ];
+		}
+
+		public function prepare( $query, ...$args ) {
+			return $query;
+		}
+	}
+	$GLOBALS['wpdb'] = new MockWpdb();
 }
 
 namespace HA_Image_Optimizer_Tests {
@@ -311,6 +346,7 @@ namespace HA_Image_Optimizer_Tests {
 	use ha\ImageOptimizer\Media\CustomFolderProcessor;
 	use ha\ImageOptimizer\Delivery\ContentFilter;
 	use ha\ImageOptimizer\Delivery\HtaccessManager;
+	use ha\ImageOptimizer\Bulk\ProgressTracker;
 
 	class TestRunner {
 
@@ -336,6 +372,7 @@ namespace HA_Image_Optimizer_Tests {
 			$this->testCustomFolderProcessor();
 			$this->testContentFilter();
 			$this->testHtaccessManager();
+			$this->testProgressTracker();
 			$this->testTranslations();
 
 			echo "\n---------------------------------------------------------\n";
@@ -570,8 +607,20 @@ namespace HA_Image_Optimizer_Tests {
 			$this->assert( str_contains( $rules, 'Header append Vary Accept' ), 'Rules include Vary Accept caching header' );
 		}
 
+		private function testProgressTracker(): void {
+			echo "\n10. Testing ProgressTracker Query Performance & Stats...\n";
+
+			$stats = ProgressTracker::get_stats();
+			$this->assert( isset( $stats['total_images'] ) && 10 === $stats['total_images'], 'ProgressTracker counts total eligible images via COUNT query' );
+			$this->assert( isset( $stats['saved_bytes'] ) && 40000 === $stats['saved_bytes'], 'ProgressTracker calculates total saved bytes from meta rows' );
+			$this->assert( isset( $stats['saved_percent'] ) && 40.0 === $stats['saved_percent'], 'ProgressTracker calculates percentage correctly' );
+
+			$queue = ProgressTracker::get_queue( 5, false );
+			$this->assert( is_array( $queue ) && count( $queue ) === 3, 'ProgressTracker retrieves unoptimized queue items' );
+		}
+
 		private function testTranslations(): void {
-			echo "\n10. Testing Language Files Integrity (26 Locales)...\n";
+			echo "\n11. Testing Language Files Integrity (26 Locales)...\n";
 
 			$potFile = $this->rootDir . '/languages/ha-image-optimizer.pot';
 			$this->assert( file_exists( $potFile ), 'Template ha-image-optimizer.pot exists' );

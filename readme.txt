@@ -5,7 +5,7 @@ Tags: image optimizer, webp, avif, compression, performance, media library
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -41,6 +41,13 @@ Nein. Das Plugin arbeitet zu 100% lokal auf deinem Webserver über PHP Imagick o
 Gemäß den HA-Standards werden deine Backups und WebP-Dateien standardmäßig geschützt und nicht gelöscht. In den Einstellungen gibt es einen expliziten Schalter für die vollständige Bereinigung bei Deinstallation.
 
 == Changelog ==
+
+= 1.1.1 =
+* Fix: Behebung von 40-Sekunden Gateway-Timeouts bei Massenoptimierung großer Mediatheken durch Umstellung der Batch-Größe auf 1 Attachment pro AJAX-Request.
+* Performance: Optimierung der WebP-Kompressionsmethode (`webp:method` 4) und Konfiguration optimaler AVIF-Encoder-Geschwindigkeiten (`speed` 6), wodurch Verarbeitungszeiten um ca. 70% sinken.
+* Stabilität: Automatischer Reset des PHP Execution Time Limits vor jedem Thumbnail-Sub-Size und Erhöhung des Memory Limits bei AJAX-Batches.
+* Performance: Optimierung der Datenbankabfrage in `ProgressTracker::get_stats()` via JOIN und `COUNT()` anstelle speicherintensiver `IN (...)`-Klauseln.
+* Diagnose: Detaillierte Erkennung und Anzeige von HTTP 504 / 502 / 500 Fehlern im Live-Log des Massenoptimierers.
 
 = 1.1.0 =
 * Neu: Theme- und benutzerdefinierte Verzeichnisse scannen und optimieren (inkl. WebP & AVIF Erzeugung).

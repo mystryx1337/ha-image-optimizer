@@ -205,7 +205,7 @@ class ImagickDriver implements OptimizerInterface {
 			$imagick = new \Imagick( $source_path );
 			$imagick->setImageFormat( 'webp' );
 			$imagick->setImageCompressionQuality( $quality );
-			$imagick->setOption( 'webp:method', '6' ); // Highest compression effort
+			$imagick->setOption( 'webp:method', '4' ); // Fast & balanced compression (replaces method 6 to prevent server timeouts)
 
 			$imagick->writeImage( $temp_file );
 			$imagick->clear();
@@ -259,6 +259,14 @@ class ImagickDriver implements OptimizerInterface {
 			$imagick = new \Imagick( $source_path );
 			$imagick->setImageFormat( 'avif' );
 			$imagick->setImageCompressionQuality( $quality );
+
+			// AVIF speed optimization: 0 (slowest) - 10 (fastest). 6-7 is optimal for web/server environments.
+			try {
+				$imagick->setOption( 'heic:speed', '6' );
+				$imagick->setOption( 'avif:speed', '6' );
+			} catch ( \Throwable ) {
+				// Silently continue if underlying ImageMagick coder does not support speed option
+			}
 
 			$imagick->writeImage( $temp_file );
 			$imagick->clear();

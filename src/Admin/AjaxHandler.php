@@ -130,6 +130,9 @@ class AjaxHandler {
 			wp_send_json_error( [ 'message' => esc_html__( 'Keine Berechtigung.', 'ha-image-optimizer' ) ], 403 );
 		}
 
+		@set_time_limit( 120 );
+		wp_raise_memory_limit( 'image' );
+
 		$ids   = isset( $_POST['ids'] ) ? array_map( 'absint', (array) $_POST['ids'] ) : [];
 		$force = ! empty( $_POST['force'] );
 
@@ -173,6 +176,9 @@ class AjaxHandler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( [ 'message' => esc_html__( 'Keine Berechtigung.', 'ha-image-optimizer' ) ], 403 );
 		}
+
+		@set_time_limit( 120 );
+		wp_raise_memory_limit( 'image' );
 
 		$files = isset( $_POST['files'] ) ? (array) $_POST['files'] : [];
 		$force = ! empty( $_POST['force'] );

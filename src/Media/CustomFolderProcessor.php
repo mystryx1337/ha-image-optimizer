@@ -233,6 +233,9 @@ class CustomFolderProcessor {
 	 * @throws \RuntimeException On error.
 	 */
 	public static function process_file( string $relative_path, bool $force = false ): array {
+		@set_time_limit( 60 );
+		wp_raise_memory_limit( 'image' );
+
 		$content_dir = trailingslashit( self::get_content_dir() );
 		$rel_clean   = ltrim( str_replace( '\\', '/', $relative_path ), '/' );
 

@@ -88,7 +88,11 @@
 		let isRunning = false;
 		let forceAll = false;
 		let bulkTarget = 'media'; // 'media' or 'custom'
-		const batchSize = 2; // Process 2 images per request to prevent PHP memory limits/timeouts
+		// Process 1 media attachment per AJAX request (1 attachment contains 8-15 responsive thumbnail sizes,
+		// processing 2+ attachments exceeds webserver gateway timeouts of 30-40s).
+		// For custom folder standalone files, 5 files are processed per request.
+		const mediaBatchSize = 1;
+		const customBatchSize = 5;
 
 		$('#ha-io-btn-start-bulk').on('click', function () {
 			forceAll = false;
@@ -213,12 +217,14 @@
 				return;
 			}
 
-			const chunk = bulkQueue.splice(0, batchSize);
 			const isCustom = (bulkTarget === 'custom');
+			const currentBatchSize = isCustom ? customBatchSize : mediaBatchSize;
+			const chunk = bulkQueue.splice(0, currentBatchSize);
 
 			// Step 2 & 3: Optimizing
 			setStep(2);
-			$('#ha-io-current-action-title').text('Schritt 2: Optimiere Bilder (' + (bulkProcessed + 1) + ' bis ' + Math.min(bulkTotal, bulkProcessed + chunk.length) + ' von ' + bulkTotal + ')...');
+			const labelType = isCustom ? 'Dateien' : 'Bilder';
+			$('#ha-io-current-action-title').text('Schritt 2: Optimiere ' + labelType + ' (' + (bulkProcessed + 1) + ' bis ' + Math.min(bulkTotal, bulkProcessed + chunk.length) + ' von ' + bulkTotal + ')...');
 			$('#ha-io-current-action-desc').text('Komprimiere Originale verlustfrei und erzeuge Smart-Zwischengrößen...');
 			$('#ha-io-current-file-badge').show();
 			$('#ha-io-current-filename').text(chunk.join(', '));
@@ -257,7 +263,7 @@
 							});
 						}
 
-						appendLog('Batch abgeschlossen (' + chunk.length + ' Dateien). Gespart: ' + formatBytes(saved));
+						appendLog('Batch abgeschlossen (' + chunk.length + ' ' + labelType + '). Gespart: ' + formatBytes(saved));
 					} else {
 						appendLog('Fehler bei Batch (' + chunk.join(',') + '): ' + (res.data ? res.data.message : 'Unbekannt'));
 						bulkProcessed += chunk.length;
@@ -266,8 +272,20 @@
 					updateProgress();
 					processNextChunk();
 				},
-				error: function () {
-					appendLog('Server-Fehler bei Batch (' + chunk.join(',') + '). Fahre fort...');
+				error: function (xhr, textStatus, errorThrown) {
+					let errorMsg = 'Server-Fehler';
+					if (xhr.status === 504 || xhr.status === 408 || textStatus === 'timeout') {
+						errorMsg = 'Gateway Timeout (HTTP ' + (xhr.status || 504) + ' - Server/Proxy hat Verbindung nach Timeout gekappt)';
+					} else if (xhr.status === 502) {
+						errorMsg = 'Bad Gateway (HTTP 502 - PHP-FPM Prozess abgebrochen)';
+					} else if (xhr.status === 500) {
+						errorMsg = 'Server-Fehler 500 (Memory-Limit oder PHP Fatal Error)';
+					} else if (xhr.status === 0) {
+						errorMsg = 'Verbindungsabbruch / Netzwerkfehler';
+					} else if (xhr.status) {
+						errorMsg = 'HTTP-Fehler ' + xhr.status;
+					}
+					appendLog('⚠️ ' + errorMsg + ' bei Batch (' + chunk.join(',') + '). Fahre fort...');
 					bulkProcessed += chunk.length;
 					updateProgress();
 					processNextChunk();

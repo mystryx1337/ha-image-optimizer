@@ -54,6 +54,9 @@ class AttachmentProcessor {
 	 * @return array<string, mixed>
 	 */
 	public static function process( int $attachment_id, ?array $metadata = null, bool $force = false ): array {
+		@set_time_limit( 60 );
+		wp_raise_memory_limit( 'image' );
+
 		$file = get_attached_file( $attachment_id );
 		if ( ! $file || ! file_exists( $file ) ) {
 			return $metadata ?? [];
@@ -152,6 +155,8 @@ class AttachmentProcessor {
 		$base_dir = dirname( $file );
 		if ( ! empty( $metadata['sizes'] ) && is_array( $metadata['sizes'] ) ) {
 			foreach ( $metadata['sizes'] as $size_name => $size_info ) {
+				@set_time_limit( 60 );
+
 				if ( empty( $size_info['file'] ) ) {
 					continue;
 				}

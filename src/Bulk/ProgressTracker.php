@@ -28,9 +28,7 @@ class ProgressTracker {
 
 		// Count total eligible images in library
 		$mime_placeholders = implode( "','", array_map( 'esc_sql', AttachmentProcessor::SUPPORTED_MIMES ) );
-		$total_query       = "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'attachment' AND post_mime_type IN ('{$mime_placeholders}')";
-		$all_ids           = $wpdb->get_col( $total_query );
-		$total_count       = count( $all_ids );
+		$total_count       = (int) $wpdb->get_var( "SELECT COUNT(ID) FROM {$wpdb->posts} WHERE post_type = 'attachment' AND post_mime_type IN ('{$mime_placeholders}')" );
 
 		if ( 0 === $total_count ) {
 			return [
@@ -44,8 +42,12 @@ class ProgressTracker {
 			];
 		}
 
-		// Count optimized images by querying meta
-		$optimized_query = "SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_ha_io_data' AND post_id IN (" . implode( ',', array_map( 'absint', $all_ids ) ) . ')';
+		// Count optimized images by querying meta joined with eligible attachments
+		$optimized_query = "SELECT pm.post_id, pm.meta_value FROM {$wpdb->postmeta} pm
+			INNER JOIN {$wpdb->posts} p ON (pm.post_id = p.ID)
+			WHERE pm.meta_key = '_ha_io_data'
+			AND p.post_type = 'attachment'
+			AND p.post_mime_type IN ('{$mime_placeholders}')";
 		$meta_rows       = $wpdb->get_results( $optimized_query );
 
 		$optimized_count = count( $meta_rows );
