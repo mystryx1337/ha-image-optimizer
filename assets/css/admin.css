@@ -1,0 +1,209 @@
+/**
+ * HA Image Optimizer Admin Stylesheet (LTR & RTL compatible)
+ */
+
+.ha-io-wrap {
+	max-width: 1100px;
+	margin-top: 20px;
+}
+
+/* Diagnostic & Content Cards */
+.ha-io-card {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 6px;
+	padding: 20px 24px;
+	margin-bottom: 24px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.ha-io-card h2 {
+	margin-top: 0;
+	padding-bottom: 12px;
+	border-bottom: 1px solid #f0f0f1;
+	font-size: 1.25rem;
+}
+
+.ha-io-card-diagnostic {
+	background: #fcfcfd;
+}
+
+.ha-io-diag-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 16px;
+	margin-top: 15px;
+}
+
+.ha-io-diag-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px 14px;
+	background: #fff;
+	border: 1px solid #e2e4e7;
+	border-radius: 4px;
+}
+
+.ha-io-diag-label {
+	font-weight: 600;
+	color: #50575e;
+}
+
+.ha-io-diag-val {
+	font-weight: 500;
+}
+
+.ha-io-status-green { color: #008a20; }
+.ha-io-status-yellow { color: #d97706; }
+.ha-io-status-red { color: #d63638; }
+
+/* Stats Overview */
+.ha-io-stats-overview {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 16px;
+	margin-bottom: 24px;
+}
+
+.ha-io-stat-box {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-left: 4px solid #2271b1;
+	border-radius: 4px;
+	padding: 18px 20px;
+	display: flex;
+	flex-direction: column;
+}
+
+.ha-io-stat-box-green { border-left-color: #008a20; }
+.ha-io-stat-box-yellow { border-left-color: #d97706; }
+.ha-io-stat-box-blue { border-left-color: #787cb5; }
+
+.ha-io-stat-number {
+	font-size: 1.8rem;
+	font-weight: 700;
+	color: #1d2327;
+	line-height: 1.2;
+}
+
+.ha-io-stat-label {
+	margin-top: 6px;
+	font-size: 0.85rem;
+	color: #646970;
+	font-weight: 500;
+}
+
+/* Badges */
+.ha-io-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 0.78rem;
+	font-weight: 600;
+	line-height: 1.4;
+	vertical-align: middle;
+}
+
+.ha-io-badge-gray { background: #f0f0f1; color: #50575e; }
+.ha-io-badge-green { background: #edfaef; color: #1a7f37; border: 1px solid #abdeb4; }
+.ha-io-badge-blue { background: #e7f5fa; color: #0073aa; border: 1px solid #bde4f5; }
+.ha-io-badge-purple { background: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+.ha-io-badge-engine { background: #f0f4f8; color: #2c3338; font-size: 0.75rem; margin-inline-start: 8px; }
+
+/* Progress Bar */
+.ha-io-progress-bar-bg {
+	background: #e2e4e7;
+	border-radius: 8px;
+	height: 18px;
+	overflow: hidden;
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.ha-io-progress-bar-fill {
+	background: linear-gradient(90deg, #2271b1, #008a20);
+	height: 100%;
+	width: 0%;
+	transition: width 0.3s ease;
+}
+
+.ha-io-progress-info {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.9rem;
+	margin-top: 8px;
+	font-weight: 600;
+	color: #2c3338;
+}
+
+/* Meta Card & Table */
+.ha-io-meta-card {
+	padding: 12px 14px;
+	background: #fcfcfd;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	margin-top: 8px;
+}
+
+.ha-io-meta-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 12px;
+}
+
+.ha-io-meta-summary-badge {
+	font-size: 1rem;
+	font-weight: 700;
+	color: #1a7f37;
+}
+
+.ha-io-stats-table {
+	margin-bottom: 12px;
+}
+
+.ha-io-pill {
+	display: inline-block;
+	background: #f0f0f1;
+	border-radius: 3px;
+	padding: 1px 6px;
+	font-size: 0.75rem;
+	margin-inline-end: 4px;
+}
+
+.ha-io-text-green { color: #1a7f37; font-weight: 600; }
+.ha-io-text-yellow { color: #b45309; }
+.ha-io-text-red { color: #d63638; }
+
+.ha-io-meta-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 10px;
+}
+
+.ha-io-code-block {
+	background: #282c34;
+	color: #abb2bf;
+	padding: 14px 18px;
+	border-radius: 4px;
+	overflow-x: auto;
+	font-family: Consolas, Monaco, monospace;
+	font-size: 0.85rem;
+}
+
+.ha-io-log-list {
+	max-height: 200px;
+	overflow-y: auto;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 10px 14px;
+	font-size: 0.85rem;
+	margin: 0;
+}
+
+.ha-io-log-list li {
+	margin-bottom: 4px;
+	color: #3c434a;
+}

@@ -1,0 +1,311 @@
+# Copyright (C) 2026 Alexander Hacker
+# This file is distributed under the GPL-3.0.
+msgid ""
+msgstr ""
+"Project-Id-Version: HA Image Optimizer 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/mystryx1337/ha-image-optimizer/issues\n"
+"POT-Creation-Date: 2026-10-21T10:00:00+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2026-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Alexander Hacker <https://7south.digital>\n"
+"Language-Team: English <https://7south.digital>\n"
+"X-Generator: Poedit 3.0\n"
+"X-Domain: ha-image-optimizer\n"
+
+#: ha-image-optimizer.php
+msgid "HA Image Optimizer"
+msgstr "HA Image Optimizer"
+
+#: src/Admin/AdminPage.php
+msgid "Massenoptimierung"
+msgstr "Massenoptimierung"
+
+#: src/Admin/AdminPage.php
+msgid "Einstellungen wurden erfolgreich gespeichert."
+msgstr "Einstellungen wurden erfolgreich gespeichert."
+
+#: src/Admin/AdminPage.php
+msgid "Optimiere..."
+msgstr "Optimiere..."
+
+#: src/Admin/AdminPage.php
+msgid "Stelle wieder her..."
+msgstr "Stelle wieder her..."
+
+#: src/Admin/AdminPage.php
+msgid "Optimierung abgeschlossen!"
+msgstr "Optimierung abgeschlossen!"
+
+#: src/Admin/AdminPage.php
+msgid "Ein Fehler ist aufgetreten."
+msgstr "Ein Fehler ist aufgetreten."
+
+#: src/Admin/AdminPage.php
+msgid "Möchtest du das Originalbild wirklich wiederherstellen?"
+msgstr "Möchtest du das Originalbild wirklich wiederherstellen?"
+
+#: src/Admin/AdminPage.php
+msgid "Pausieren"
+msgstr "Pausieren"
+
+#: src/Admin/AdminPage.php
+msgid "Fortsetzen"
+msgstr "Fortsetzen"
+
+#: src/Admin/MediaColumn.php
+msgid "HA Optimizer Details"
+msgstr "HA Optimizer Details"
+
+#: src/Admin/MediaColumn.php
+msgid "Unoptimiert"
+msgstr "Unoptimiert"
+
+#: src/Admin/MediaColumn.php
+msgid "Optimieren"
+msgstr "Optimieren"
+
+#: src/Admin/MediaColumn.php
+msgid "Neu optimieren"
+msgstr "Neu optimieren"
+
+#: src/Admin/MediaColumn.php
+msgid "Wiederherstellen"
+msgstr "Wiederherstellen"
+
+#: src/Admin/AjaxHandler.php
+msgid "Keine ausreichenden Berechtigungen."
+msgstr "Keine ausreichenden Berechtigungen."
+
+#: src/Admin/AjaxHandler.php
+msgid "Ungültige Bild-ID."
+msgstr "Ungültige Bild-ID."
+
+#: src/Admin/AjaxHandler.php
+msgid "Bild erfolgreich optimiert."
+msgstr "Bild erfolgreich optimiert."
+
+#: src/Admin/AjaxHandler.php
+msgid "Originalbild erfolgreich wiederhergestellt."
+msgstr "Originalbild erfolgreich wiederhergestellt."
+
+#: src/Admin/AjaxHandler.php
+msgid "Wiederherstellung fehlgeschlagen (kein Backup vorhanden)."
+msgstr "Wiederherstellung fehlgeschlagen (kein Backup vorhanden)."
+
+#: src/Common/CompressionLevel.php
+msgid "Verlustfrei (Lossless - 100% Schärfe)"
+msgstr "Verlustfrei (Lossless - 100% Schärfe)"
+
+#: src/Common/CompressionLevel.php
+msgid "Smart (Ausgewogen - ca. 82% Qualität)"
+msgstr "Smart (Ausgewogen - ca. 82% Qualität)"
+
+#: src/Common/CompressionLevel.php
+msgid "Ultra (Aggressiv - ca. 72% Qualität)"
+msgstr "Ultra (Aggressiv - ca. 72% Qualität)"
+
+#: src/Common/DeliveryMode.php
+msgid "<picture>-Tag Ersetzung (Universell & CDN-sicher)"
+msgstr "<picture>-Tag Ersetzung (Universell & CDN-sicher)"
+
+#: src/Common/DeliveryMode.php
+msgid ".htaccess Server-Rewrite (0 ms PHP-Overhead, Apache & LiteSpeed)"
+msgstr ".htaccess Server-Rewrite (0 ms PHP-Overhead, Apache & LiteSpeed)"
+
+#: src/Common/DeliveryMode.php
+msgid "Deaktiviert (Bilder werden nicht automatisch ersetzt)"
+msgstr "Deaktiviert (Bilder werden nicht automatisch ersetzt)"
+
+#: templates/admin-settings.php
+msgid "HA Image Optimizer: Einstellungen & System-Status"
+msgstr "HA Image Optimizer: Einstellungen & System-Status"
+
+#: templates/admin-settings.php
+msgid "Server-Fähigkeiten & Diagnose"
+msgstr "Server-Fähigkeiten & Diagnose"
+
+#: templates/admin-settings.php
+msgid "PHP Version:"
+msgstr "PHP Version:"
+
+#: templates/admin-settings.php
+msgid "Aktiver Treiber:"
+msgstr "Aktiver Treiber:"
+
+#: templates/admin-settings.php
+msgid "WebP Unterstützung:"
+msgstr "WebP Unterstützung:"
+
+#: templates/admin-settings.php
+msgid "AVIF Unterstützung:"
+msgstr "AVIF Unterstützung:"
+
+#: templates/admin-settings.php
+msgid "Webserver:"
+msgstr "Webserver:"
+
+#: templates/admin-settings.php
+msgid "Speicherlimit:"
+msgstr "Speicherlimit:"
+
+#: templates/admin-settings.php
+msgid "Kompressions-Einstellungen"
+msgstr "Kompressions-Einstellungen"
+
+#: templates/admin-settings.php
+msgid "Originalbild-Optimierung (Master)"
+msgstr "Originalbild-Optimierung (Master)"
+
+#: templates/admin-settings.php
+msgid "Zwischengrößen-Optimierung (Thumbnails)"
+msgstr "Zwischengrößen-Optimierung (Thumbnails)"
+
+#: templates/admin-settings.php
+msgid "Next-Gen Bildformate"
+msgstr "Next-Gen Bildformate"
+
+#: templates/admin-settings.php
+msgid "WebP-Versionen automatisch generieren"
+msgstr "WebP-Versionen automatisch generieren"
+
+#: templates/admin-settings.php
+msgid "AVIF-Versionen automatisch generieren (Next-Gen+)"
+msgstr "AVIF-Versionen automatisch generieren (Next-Gen+)"
+
+#: templates/admin-settings.php
+msgid "Auslieferungsmethode (Delivery)"
+msgstr "Auslieferungsmethode (Delivery)"
+
+#: templates/admin-settings.php
+msgid "Full-Page Output Buffer"
+msgstr "Full-Page Output Buffer"
+
+#: templates/admin-settings.php
+msgid "Vollständigen Seitenpuffer durchsuchen (ob_start)"
+msgstr "Vollständigen Seitenpuffer durchsuchen (ob_start)"
+
+#: templates/admin-settings.php
+msgid "Automatische Größenbeschränkung (Resizing)"
+msgstr "Automatische Größenbeschränkung (Resizing)"
+
+#: templates/admin-settings.php
+msgid "Übergroße Uploads automatisch herunterskalieren auf maximal:"
+msgstr "Übergroße Uploads automatisch herunterskalieren auf maximal:"
+
+#: templates/admin-settings.php
+msgid "Breite:"
+msgstr "Breite:"
+
+#: templates/admin-settings.php
+msgid "Höhe:"
+msgstr "Höhe:"
+
+#: templates/admin-settings.php
+msgid "Backup & Metadaten"
+msgstr "Backup & Metadaten"
+
+#: templates/admin-settings.php
+msgid "Unverändertes Originalbild im geschützten Backup-Ordner sichern"
+msgstr "Unverändertes Originalbild im geschützten Backup-Ordner sichern"
+
+#: templates/admin-settings.php
+msgid "EXIF-Kameradaten und Urheberrechte beibehalten (erhöht Dateigröße)"
+msgstr "EXIF-Kameradaten und Urheberrechte beibehalten (erhöht Dateigröße)"
+
+#: templates/admin-settings.php
+msgid "Deinstallations-Schutzwall (HA-Standard)"
+msgstr "Deinstallations-Schutzwall (HA-Standard)"
+
+#: templates/admin-settings.php
+msgid "Vollständige Datenlöschung bei Deinstallation:"
+msgstr "Vollständige Datenlöschung bei Deinstallation:"
+
+#: templates/admin-settings.php
+msgid "Einstellungen speichern"
+msgstr "Einstellungen speichern"
+
+#: templates/admin-settings.php
+msgid "Nginx Konfigurations-Hilfe (Optional für Nginx-Server)"
+msgstr "Nginx Konfigurations-Hilfe (Optional für Nginx-Server)"
+
+#: templates/bulk-optimizer-page.php
+msgid "HA Image Optimizer: Massenoptimierung (Bulk)"
+msgstr "HA Image Optimizer: Massenoptimierung (Bulk)"
+
+#: templates/bulk-optimizer-page.php
+msgid "Bilder Gesamt"
+msgstr "Bilder Gesamt"
+
+#: templates/bulk-optimizer-page.php
+msgid "Bereits Optimiert"
+msgstr "Bereits Optimiert"
+
+#: templates/bulk-optimizer-page.php
+msgid "Noch Unoptimiert"
+msgstr "Noch Unoptimiert"
+
+#: templates/bulk-optimizer-page.php
+msgid "Gesparter Speicherplatz"
+msgstr "Gesparter Speicherplatz"
+
+#: templates/bulk-optimizer-page.php
+msgid "Massenverarbeitung starten"
+msgstr "Massenverarbeitung starten"
+
+#: templates/bulk-optimizer-page.php
+msgid "Unoptimierte Bilder jetzt verarbeiten"
+msgstr "Unoptimierte Bilder jetzt verarbeiten"
+
+#: templates/bulk-optimizer-page.php
+msgid "Alle Bilder erneut optimieren (Force All)"
+msgstr "Alle Bilder erneut optimieren (Force All)"
+
+#: templates/bulk-optimizer-page.php
+msgid "Aktivitäts-Protokoll"
+msgstr "Aktivitäts-Protokoll"
+
+#: templates/media-details-meta-box.php
+msgid "Dieses Bild wurde noch nicht optimiert."
+msgstr "Dieses Bild wurde noch nicht optimiert."
+
+#: templates/media-details-meta-box.php
+msgid "Jetzt optimieren"
+msgstr "Jetzt optimieren"
+
+#: templates/media-details-meta-box.php
+msgid "Bildgröße"
+msgstr "Bildgröße"
+
+#: templates/media-details-meta-box.php
+msgid "Vorher"
+msgstr "Vorher"
+
+#: templates/media-details-meta-box.php
+msgid "Nachher"
+msgstr "Nachher"
+
+#: templates/media-details-meta-box.php
+msgid "Ersparnis"
+msgstr "Ersparnis"
+
+#: templates/media-details-meta-box.php
+msgid "Originalbild (Master)"
+msgstr "Originalbild (Master)"
+
+#: templates/media-details-meta-box.php
+msgid "Erneut optimieren"
+msgstr "Erneut optimieren"
+
+#: templates/media-details-meta-box.php
+msgid "Original wiederherstellen"
+msgstr "Original wiederherstellen"
+
+#: templates/media-details-meta-box.php
+msgid "Originalbild ist sicher im Backup gespeichert."
+msgstr "Originalbild ist sicher im Backup gespeichert."
+
+#: templates/media-details-meta-box.php
+msgid "Kein Backup vorhanden."
+msgstr "Kein Backup vorhanden."

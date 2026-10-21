@@ -1,0 +1,23 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files & logs
+*.log
+*.tmp
+*.bak
+*.swp
+scratch/
+
+# Build and package artifacts
+release/
+*.zip
+
+# Keep vendor/plugin-update-checker tracked as per HA standards!

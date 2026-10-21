@@ -1,0 +1,110 @@
+<?php
+/**
+ * Progress Tracker & Media Library Statistics.
+ *
+ * @package HA_Image_Optimizer
+ */
+
+namespace ha\ImageOptimizer\Bulk;
+
+use ha\ImageOptimizer\Media\AttachmentProcessor;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Class ProgressTracker
+ */
+class ProgressTracker {
+
+	/**
+	 * Get total count and statistics of media items.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function get_stats(): array {
+		global $wpdb;
+
+		// Count total eligible images in library
+		$mime_placeholders = implode( "','", array_map( 'esc_sql', AttachmentProcessor::SUPPORTED_MIMES ) );
+		$total_query       = "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'attachment' AND post_mime_type IN ('{$mime_placeholders}')";
+		$all_ids           = $wpdb->get_col( $total_query );
+		$total_count       = count( $all_ids );
+
+		if ( 0 === $total_count ) {
+			return [
+				'total_images'     => 0,
+				'optimized_images' => 0,
+				'unoptimized'      => 0,
+				'total_before'     => 0,
+				'total_after'      => 0,
+				'saved_bytes'      => 0,
+				'saved_percent'    => 0.0,
+			];
+		}
+
+		// Count optimized images by querying meta
+		$optimized_query = "SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_ha_io_data' AND post_id IN (" . implode( ',', array_map( 'absint', $all_ids ) ) . ')';
+		$meta_rows       = $wpdb->get_results( $optimized_query );
+
+		$optimized_count = count( $meta_rows );
+		$total_before    = 0;
+		$total_after     = 0;
+
+		foreach ( $meta_rows as $row ) {
+			$data = maybe_unserialize( $row->meta_value );
+			if ( is_array( $data ) && ! empty( $data['total'] ) ) {
+				$total_before += (int) ( $data['total']['before'] ?? 0 );
+				$total_after  += (int) ( $data['total']['after'] ?? 0 );
+			}
+		}
+
+		$saved_bytes   = max( 0, $total_before - $total_after );
+		$saved_percent = ( $total_before > 0 ) ? round( ( $saved_bytes / $total_before ) * 100, 2 ) : 0.0;
+
+		return [
+			'total_images'     => $total_count,
+			'optimized_images' => $optimized_count,
+			'unoptimized'      => max( 0, $total_count - $optimized_count ),
+			'total_before'     => $total_before,
+			'total_after'      => $total_after,
+			'saved_bytes'      => $saved_bytes,
+			'saved_percent'    => $saved_percent,
+		];
+	}
+
+	/**
+	 * Get attachment IDs that need optimization.
+	 *
+	 * @param int  $limit Max items to retrieve.
+	 * @param bool $all If true, returns all eligible items regardless of existing optimization.
+	 * @return array<int>
+	 */
+	public static function get_queue( int $limit = 50, bool $all = false ): array {
+		global $wpdb;
+
+		$mime_placeholders = implode( "','", array_map( 'esc_sql', AttachmentProcessor::SUPPORTED_MIMES ) );
+
+		if ( $all ) {
+			$sql = $wpdb->prepare(
+				"SELECT ID FROM {$wpdb->posts} WHERE post_type = 'attachment' AND post_mime_type IN ('{$mime_placeholders}') ORDER BY ID DESC LIMIT %d",
+				$limit
+			);
+		} else {
+			$sql = $wpdb->prepare(
+				"SELECT p.ID FROM {$wpdb->posts} p
+				LEFT JOIN {$wpdb->postmeta} pm ON (p.ID = pm.post_id AND pm.meta_key = '_ha_io_data')
+				WHERE p.post_type = 'attachment'
+				AND p.post_mime_type IN ('{$mime_placeholders}')
+				AND pm.post_id IS NULL
+				ORDER BY p.ID DESC
+				LIMIT %d",
+				$limit
+			);
+		}
+
+		$results = $wpdb->get_col( $sql );
+		return array_map( 'absint', $results );
+	}
+}

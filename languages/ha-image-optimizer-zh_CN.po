@@ -1,0 +1,231 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: HA Image Optimizer 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/mystryx1337/ha-image-optimizer/issues\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_CN\n"
+"X-Domain: ha-image-optimizer\n"
+
+msgid "HA Image Optimizer"
+msgstr "HA Image Optimizer"
+
+msgid "Massenoptimierung"
+msgstr "Bulk Optimization"
+
+msgid "Einstellungen wurden erfolgreich gespeichert."
+msgstr "Settings saved successfully."
+
+msgid "Optimiere..."
+msgstr "Optimizing..."
+
+msgid "Stelle wieder her..."
+msgstr "Restoring..."
+
+msgid "Optimierung abgeschlossen!"
+msgstr "Optimization completed!"
+
+msgid "Ein Fehler ist aufgetreten."
+msgstr "An error occurred."
+
+msgid "Möchtest du das Originalbild wirklich wiederherstellen?"
+msgstr "Do you really want to restore the original image?"
+
+msgid "Pausieren"
+msgstr "Pause"
+
+msgid "Fortsetzen"
+msgstr "Resume"
+
+msgid "HA Optimizer Details"
+msgstr "HA Optimizer Details"
+
+msgid "Unoptimiert"
+msgstr "Unoptimized"
+
+msgid "Optimieren"
+msgstr "Optimize"
+
+msgid "Neu optimieren"
+msgstr "Re-optimize"
+
+msgid "Wiederherstellen"
+msgstr "Restore"
+
+msgid "Keine ausreichenden Berechtigungen."
+msgstr "Insufficient permissions."
+
+msgid "Ungültige Bild-ID."
+msgstr "Invalid image ID."
+
+msgid "Bild erfolgreich optimiert."
+msgstr "Image optimized successfully."
+
+msgid "Originalbild erfolgreich wiederhergestellt."
+msgstr "Original image restored successfully."
+
+msgid "Wiederherstellung fehlgeschlagen (kein Backup vorhanden)."
+msgstr "Restore failed (no backup found)."
+
+msgid "Verlustfrei (Lossless - 100% Schärfe)"
+msgstr "Lossless (100% sharpness)"
+
+msgid "Smart (Ausgewogen - ca. 82% Qualität)"
+msgstr "Smart (Balanced - ~82% quality)"
+
+msgid "Ultra (Aggressiv - ca. 72% Qualität)"
+msgstr "Ultra (Aggressive - ~72% quality)"
+
+msgid "<picture>-Tag Ersetzung (Universell & CDN-sicher)"
+msgstr "<picture> Tag Replacement (Universal & CDN safe)"
+
+msgid ".htaccess Server-Rewrite (0 ms PHP-Overhead, Apache & LiteSpeed)"
+msgstr ".htaccess Server Rewrite (0 ms PHP overhead)"
+
+msgid "Deaktiviert (Bilder werden nicht automatisch ersetzt)"
+msgstr "Disabled (Images are not replaced automatically)"
+
+msgid "HA Image Optimizer: Einstellungen & System-Status"
+msgstr "HA Image Optimizer: Settings & System Status"
+
+msgid "Server-Fähigkeiten & Diagnose"
+msgstr "Server Capabilities & Diagnostics"
+
+msgid "PHP Version:"
+msgstr "PHP Version:"
+
+msgid "Aktiver Treiber:"
+msgstr "Active Driver:"
+
+msgid "WebP Unterstützung:"
+msgstr "WebP Support:"
+
+msgid "AVIF Unterstützung:"
+msgstr "AVIF Support:"
+
+msgid "Webserver:"
+msgstr "Web Server:"
+
+msgid "Speicherlimit:"
+msgstr "Memory Limit:"
+
+msgid "Kompressions-Einstellungen"
+msgstr "Compression Settings"
+
+msgid "Originalbild-Optimierung (Master)"
+msgstr "Original Image Optimization (Master)"
+
+msgid "Zwischengrößen-Optimierung (Thumbnails)"
+msgstr "Thumbnail Optimization"
+
+msgid "Next-Gen Bildformate"
+msgstr "Next-Gen Image Formats"
+
+msgid "WebP-Versionen automatisch generieren"
+msgstr "Automatically generate WebP versions"
+
+msgid "AVIF-Versionen automatisch generieren (Next-Gen+)"
+msgstr "Automatically generate AVIF versions"
+
+msgid "Auslieferungsmethode (Delivery)"
+msgstr "Delivery Method"
+
+msgid "Full-Page Output Buffer"
+msgstr "Full-Page Output Buffer"
+
+msgid "Vollständigen Seitenpuffer durchsuchen (ob_start)"
+msgstr "Search full page output buffer (ob_start)"
+
+msgid "Automatische Größenbeschränkung (Resizing)"
+msgstr "Automatic Resizing"
+
+msgid "Übergroße Uploads automatisch herunterskalieren auf maximal:"
+msgstr "Automatically downscale oversized uploads to maximum:"
+
+msgid "Breite:"
+msgstr "Width:"
+
+msgid "Höhe:"
+msgstr "Height:"
+
+msgid "Backup & Metadaten"
+msgstr "Backup & Metadata"
+
+msgid "Unverändertes Originalbild im geschützten Backup-Ordner sichern"
+msgstr "Save untouched original image in secure backup folder"
+
+msgid "EXIF-Kameradaten und Urheberrechte beibehalten (erhöht Dateigröße)"
+msgstr "Keep EXIF camera metadata and copyright (increases file size)"
+
+msgid "Deinstallations-Schutzwall (HA-Standard)"
+msgstr "Uninstall Protection (HA Standard)"
+
+msgid "Vollständige Datenlöschung bei Deinstallation:"
+msgstr "Complete data deletion on uninstall:"
+
+msgid "Einstellungen speichern"
+msgstr "Save Settings"
+
+msgid "Nginx Konfigurations-Hilfe (Optional für Nginx-Server)"
+msgstr "Nginx Configuration Helper"
+
+msgid "HA Image Optimizer: Massenoptimierung (Bulk)"
+msgstr "HA Image Optimizer: Bulk Optimization"
+
+msgid "Bilder Gesamt"
+msgstr "Total Images"
+
+msgid "Bereits Optimiert"
+msgstr "Already Optimized"
+
+msgid "Noch Unoptimiert"
+msgstr "Still Unoptimized"
+
+msgid "Gesparter Speicherplatz"
+msgstr "Disk Space Saved"
+
+msgid "Massenverarbeitung starten"
+msgstr "Start Bulk Processing"
+
+msgid "Unoptimierte Bilder jetzt verarbeiten"
+msgstr "Process unoptimized images now"
+
+msgid "Alle Bilder erneut optimieren (Force All)"
+msgstr "Re-optimize all images (Force All)"
+
+msgid "Aktivitäts-Protokoll"
+msgstr "Activity Log"
+
+msgid "Dieses Bild wurde noch nicht optimiert."
+msgstr "This image has not been optimized yet."
+
+msgid "Jetzt optimieren"
+msgstr "Optimize Now"
+
+msgid "Bildgröße"
+msgstr "Image Size"
+
+msgid "Vorher"
+msgstr "Before"
+
+msgid "Nachher"
+msgstr "After"
+
+msgid "Ersparnis"
+msgstr "Savings"
+
+msgid "Originalbild (Master)"
+msgstr "Original Image (Master)"
+
+msgid "Erneut optimieren"
+msgstr "Re-optimize"
+
+msgid "Original wiederherstellen"
+msgstr "Restore Original"
+
+msgid "Originalbild ist sicher im Backup gespeichert."
+msgstr "Original image is safely backed up."
+
+msgid "Kein Backup vorhanden."
+msgstr "No backup available."

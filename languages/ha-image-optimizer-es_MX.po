@@ -1,0 +1,231 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: HA Image Optimizer 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/mystryx1337/ha-image-optimizer/issues\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es_MX\n"
+"X-Domain: ha-image-optimizer\n"
+
+msgid "HA Image Optimizer"
+msgstr "HA Image Optimizer"
+
+msgid "Massenoptimierung"
+msgstr "Optimización masiva"
+
+msgid "Einstellungen wurden erfolgreich gespeichert."
+msgstr "Los ajustes se han guardado correctamente."
+
+msgid "Optimiere..."
+msgstr "Optimizando..."
+
+msgid "Stelle wieder her..."
+msgstr "Restaurando..."
+
+msgid "Optimierung abgeschlossen!"
+msgstr "¡Optimización completada!"
+
+msgid "Ein Fehler ist aufgetreten."
+msgstr "Se ha producido un error."
+
+msgid "Möchtest du das Originalbild wirklich wiederherstellen?"
+msgstr "¿Realmente deseas restaurar la imagen original?"
+
+msgid "Pausieren"
+msgstr "Pausar"
+
+msgid "Fortsetzen"
+msgstr "Reanudar"
+
+msgid "HA Optimizer Details"
+msgstr "Detalles de HA Optimizer"
+
+msgid "Unoptimiert"
+msgstr "Sin optimizar"
+
+msgid "Optimieren"
+msgstr "Optimizar"
+
+msgid "Neu optimieren"
+msgstr "Reoptimizar"
+
+msgid "Wiederherstellen"
+msgstr "Restaurar"
+
+msgid "Keine ausreichenden Berechtigungen."
+msgstr "Permisos insuficientes."
+
+msgid "Ungültige Bild-ID."
+msgstr "ID de imagen no válida."
+
+msgid "Bild erfolgreich optimiert."
+msgstr "Imagen optimizada con éxito."
+
+msgid "Originalbild erfolgreich wiederhergestellt."
+msgstr "Imagen original restaurada con éxito."
+
+msgid "Wiederherstellung fehlgeschlagen (kein Backup vorhanden)."
+msgstr "Error de restauración (no hay copia de seguridad)."
+
+msgid "Verlustfrei (Lossless - 100% Schärfe)"
+msgstr "Sin pérdidas (Lossless - 100% nitidez)"
+
+msgid "Smart (Ausgewogen - ca. 82% Qualität)"
+msgstr "Inteligente (Equilibrado - aprox. 82% de calidad)"
+
+msgid "Ultra (Aggressiv - ca. 72% Qualität)"
+msgstr "Ultra (Agresivo - aprox. 72% de calidad)"
+
+msgid "<picture>-Tag Ersetzung (Universell & CDN-sicher)"
+msgstr "Reemplazo de etiquetas <picture> (Universal y seguro para CDN)"
+
+msgid ".htaccess Server-Rewrite (0 ms PHP-Overhead, Apache & LiteSpeed)"
+msgstr "Reescritura de servidor .htaccess (0 ms sobrecarga PHP)"
+
+msgid "Deaktiviert (Bilder werden nicht automatisch ersetzt)"
+msgstr "Desactivado (las imágenes no se reemplazan automáticamente)"
+
+msgid "HA Image Optimizer: Einstellungen & System-Status"
+msgstr "HA Image Optimizer: Ajustes y estado del sistema"
+
+msgid "Server-Fähigkeiten & Diagnose"
+msgstr "Capacidades del servidor y diagnóstico"
+
+msgid "PHP Version:"
+msgstr "Versión de PHP:"
+
+msgid "Aktiver Treiber:"
+msgstr "Controlador activo:"
+
+msgid "WebP Unterstützung:"
+msgstr "Soporte WebP:"
+
+msgid "AVIF Unterstützung:"
+msgstr "Soporte AVIF:"
+
+msgid "Webserver:"
+msgstr "Servidor web:"
+
+msgid "Speicherlimit:"
+msgstr "Límite de memoria:"
+
+msgid "Kompressions-Einstellungen"
+msgstr "Ajustes de compresión"
+
+msgid "Originalbild-Optimierung (Master)"
+msgstr "Optimización de imagen original (Master)"
+
+msgid "Zwischengrößen-Optimierung (Thumbnails)"
+msgstr "Optimización de miniaturas"
+
+msgid "Next-Gen Bildformate"
+msgstr "Formatos de imagen de nueva generación"
+
+msgid "WebP-Versionen automatisch generieren"
+msgstr "Generar automáticamente versiones WebP"
+
+msgid "AVIF-Versionen automatisch generieren (Next-Gen+)"
+msgstr "Generar automáticamente versiones AVIF"
+
+msgid "Auslieferungsmethode (Delivery)"
+msgstr "Método de entrega"
+
+msgid "Full-Page Output Buffer"
+msgstr "Búfer de salida de página completa"
+
+msgid "Vollständigen Seitenpuffer durchsuchen (ob_start)"
+msgstr "Buscar en todo el búfer de salida (ob_start)"
+
+msgid "Automatische Größenbeschränkung (Resizing)"
+msgstr "Redimensionamiento automático"
+
+msgid "Übergroße Uploads automatisch herunterskalieren auf maximal:"
+msgstr "Redimensionar subidas grandes automáticamente al máximo:"
+
+msgid "Breite:"
+msgstr "Anchura:"
+
+msgid "Höhe:"
+msgstr "Altura:"
+
+msgid "Backup & Metadaten"
+msgstr "Copia de seguridad y metadatos"
+
+msgid "Unverändertes Originalbild im geschützten Backup-Ordner sichern"
+msgstr "Guardar original intacto en carpeta protegida"
+
+msgid "EXIF-Kameradaten und Urheberrechte beibehalten (erhöht Dateigröße)"
+msgstr "Conservar datos EXIF y derechos de autor"
+
+msgid "Deinstallations-Schutzwall (HA-Standard)"
+msgstr "Protección de desinstalación (Estándar HA)"
+
+msgid "Vollständige Datenlöschung bei Deinstallation:"
+msgstr "Eliminación completa de datos al desinstalar:"
+
+msgid "Einstellungen speichern"
+msgstr "Guardar ajustes"
+
+msgid "Nginx Konfigurations-Hilfe (Optional für Nginx-Server)"
+msgstr "Ayuda de configuración de Nginx"
+
+msgid "HA Image Optimizer: Massenoptimierung (Bulk)"
+msgstr "HA Image Optimizer: Optimización masiva"
+
+msgid "Bilder Gesamt"
+msgstr "Total de imágenes"
+
+msgid "Bereits Optimiert"
+msgstr "Ya optimizadas"
+
+msgid "Noch Unoptimiert"
+msgstr "Sin optimizar"
+
+msgid "Gesparter Speicherplatz"
+msgstr "Espacio ahorrado"
+
+msgid "Massenverarbeitung starten"
+msgstr "Iniciar procesamiento masivo"
+
+msgid "Unoptimierte Bilder jetzt verarbeiten"
+msgstr "Procesar imágenes no optimizadas ahora"
+
+msgid "Alle Bilder erneut optimieren (Force All)"
+msgstr "Reoptimizar todas las imágenes"
+
+msgid "Aktivitäts-Protokoll"
+msgstr "Registro de actividad"
+
+msgid "Dieses Bild wurde noch nicht optimiert."
+msgstr "Esta imagen aún no ha sido optimizada."
+
+msgid "Jetzt optimieren"
+msgstr "Optimizar ahora"
+
+msgid "Bildgröße"
+msgstr "Tamaño de imagen"
+
+msgid "Vorher"
+msgstr "Antes"
+
+msgid "Nachher"
+msgstr "Después"
+
+msgid "Ersparnis"
+msgstr "Ahorro"
+
+msgid "Originalbild (Master)"
+msgstr "Imagen original (Master)"
+
+msgid "Erneut optimieren"
+msgstr "Reoptimizar"
+
+msgid "Original wiederherstellen"
+msgstr "Restaurar original"
+
+msgid "Originalbild ist sicher im Backup gespeichert."
+msgstr "La imagen original está respaldada de forma segura."
+
+msgid "Kein Backup vorhanden."
+msgstr "No hay copia de seguridad."
