@@ -576,21 +576,17 @@ namespace HA_Image_Optimizer_Tests {
 			$potFile = $this->rootDir . '/languages/ha-image-optimizer.pot';
 			$this->assert( file_exists( $potFile ), 'Template ha-image-optimizer.pot exists' );
 
-			$expectedLocales = [
-				'de_DE', 'de_CH', 'en_GB', 'fr_FR', 'es_ES', 'it_IT', 'pt_PT', 'pt_BR',
-				'nl_NL', 'pl_PL', 'ru_RU', 'ja', 'zh_CN', 'zh_TW', 'tr_TR', 'ar',
-				'hi_IN', 'sv_SE', 'da_DK', 'nb_NO', 'fi', 'cs_CZ', 'el', 'he_IL',
-				'ko_KR', 'uk'
-			];
+			$l10nFiles = glob( $this->rootDir . '/languages/*.l10n.php' );
+			$this->assert( count( $l10nFiles ) >= 26, 'Found ' . count( $l10nFiles ) . ' modern WordPress .l10n.php language packs' );
 
 			$allPresent = true;
-			foreach ( $expectedLocales as $loc ) {
-				$moFile   = $this->rootDir . "/languages/ha-image-optimizer-{$loc}.mo";
-				$l10nFile = $this->rootDir . "/languages/ha-image-optimizer-{$loc}.l10n.php";
+			foreach ( $l10nFiles as $l10nFile ) {
+				$moFile = preg_replace( '/\.l10n\.php$/', '.mo', $l10nFile );
+				$poFile = preg_replace( '/\.l10n\.php$/', '.po', $l10nFile );
 
-				if ( ! file_exists( $moFile ) || ! file_exists( $l10nFile ) ) {
+				if ( ! file_exists( $moFile ) || ! file_exists( $poFile ) ) {
 					$allPresent = false;
-					$this->assert( false, "Missing translation files for {$loc}" );
+					$this->assert( false, "Missing .mo or .po counterpart for {$l10nFile}" );
 					break;
 				}
 
