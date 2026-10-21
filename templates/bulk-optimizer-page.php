@@ -13,6 +13,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <div class="wrap ha-io-wrap">
+	<!-- Navigation Tabs Header -->
+	<nav class="nav-tab-wrapper ha-io-nav-tabs">
+		<a href="<?php echo esc_url( admin_url( 'options-general.php?page=ha-image-optimizer' ) ); ?>" class="nav-tab">
+			⚙️ <?php esc_html_e( 'Einstellungen', 'ha-image-optimizer' ); ?>
+		</a>
+		<a href="<?php echo esc_url( admin_url( 'upload.php?page=ha-image-optimizer-bulk' ) ); ?>" class="nav-tab nav-tab-active">
+			⚡ <?php esc_html_e( 'Massenoptimierung', 'ha-image-optimizer' ); ?>
+		</a>
+		<a href="<?php echo esc_url( admin_url( 'upload.php?page=ha-image-optimizer-auditor' ) ); ?>" class="nav-tab">
+			🔍 <?php esc_html_e( 'Verwaiste Medien (Auditor)', 'ha-image-optimizer' ); ?>
+		</a>
+	</nav>
+
 	<h1>⚡ <?php esc_html_e( 'HA Image Optimizer: Massenoptimierung (Bulk)', 'ha-image-optimizer' ); ?></h1>
 
 	<div class="ha-io-stats-overview">

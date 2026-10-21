@@ -12,6 +12,7 @@ use ha\ImageOptimizer\Bulk\ProgressTracker;
 use ha\ImageOptimizer\Bulk\BulkProcessor;
 use ha\ImageOptimizer\Media\BackupManager;
 use ha\ImageOptimizer\Media\CustomFolderProcessor;
+use ha\ImageOptimizer\Auditor\MediaAuditor;
 use WP_CLI;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -290,6 +291,148 @@ class OptimizerCliCommand {
 		}
 
 		WP_CLI::error( 'Bitte gib entweder --file=<rel_path> oder --all an.' );
+	}
+
+	/**
+	 * Audit media library for orphan or unused files.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--filter=<all|unattached|attached|used>]
+	 * : Filter displayed items (default: unattached).
+	 *
+	 * [--format=<table|json|csv>]
+	 * : Render output in particular format (default: table).
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ha-optimizer audit
+	 *     wp ha-optimizer audit --filter=all
+	 *     wp ha-optimizer audit --format=json
+	 *
+	 * @subcommand audit
+	 *
+	 * @param array<string> $args Positional arguments.
+	 * @param array<string, mixed> $assoc_args Associative arguments.
+	 * @return void
+	 */
+	public function audit( array $args, array $assoc_args ): void {
+		$queue = MediaAuditor::get_audit_queue();
+		$total = count( $queue );
+
+		if ( 0 === $total ) {
+			WP_CLI::success( 'Keine Medien zum Scannen vorhanden.' );
+			return;
+		}
+
+		WP_CLI::line( sprintf( 'Scanne %d Medien-Anhänge...', $total ) );
+		$progress = \WP_CLI\Utils\make_progress_bar( 'Analysiere Verwendung', $total );
+
+		$results = [];
+		foreach ( $queue as $id ) {
+			$results[] = MediaAuditor::audit_attachment( $id );
+			$progress->tick();
+		}
+		$progress->finish();
+
+		MediaAuditor::update_cached_results( $results );
+
+		$filter = $assoc_args['filter'] ?? 'unattached';
+		$format = $assoc_args['format'] ?? 'table';
+
+		$filtered = array_filter( $results, function ( $item ) use ( $filter ) {
+			if ( 'all' === $filter ) {
+				return true;
+			}
+			if ( 'unattached' === $filter ) {
+				return MediaAuditor::STATUS_UNATTACHED_UNUSED === $item['status'];
+			}
+			if ( 'attached' === $filter ) {
+				return MediaAuditor::STATUS_ATTACHED_UNUSED === $item['status'];
+			}
+			if ( 'used' === $filter ) {
+				return MediaAuditor::STATUS_USED === $item['status'];
+			}
+			return true;
+		} );
+
+		$table_data = [];
+		foreach ( $filtered as $f ) {
+			$table_data[] = [
+				'ID'         => $f['id'],
+				'Datei'      => $f['filename'],
+				'Speicher'   => $f['disk_human'],
+				'Status'     => $f['status'],
+				'Referenzen' => ! empty( $f['references'] ) ? implode( '; ', $f['references'] ) : ( $f['parent_title'] ? 'Zugeordnet zu: ' . $f['parent_title'] : 'Keine' ),
+			];
+		}
+
+		\WP_CLI\Utils\format_items( $format, $table_data, [ 'ID', 'Datei', 'Speicher', 'Status', 'Referenzen' ] );
+	}
+
+	/**
+	 * Move orphan media files to trash.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--force]
+	 * : Permanently delete without moving to trash.
+	 *
+	 * [--yes]
+	 * : Proceed without interactive confirmation prompt.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ha-optimizer clean-orphans
+	 *     wp ha-optimizer clean-orphans --yes
+	 *     wp ha-optimizer clean-orphans --force --yes
+	 *
+	 * @subcommand clean-orphans
+	 *
+	 * @param array<string> $args Positional arguments.
+	 * @param array<string, mixed> $assoc_args Associative arguments.
+	 * @return void
+	 */
+	public function clean_orphans( array $args, array $assoc_args ): void {
+		$force = ! empty( $assoc_args['force'] );
+		$yes   = ! empty( $assoc_args['yes'] );
+
+		$queue = MediaAuditor::get_audit_queue();
+		$orphans = [];
+
+		WP_CLI::line( 'Ermittle verwaiste Medien...' );
+		foreach ( $queue as $id ) {
+			$audit = MediaAuditor::audit_attachment( $id );
+			if ( MediaAuditor::STATUS_UNATTACHED_UNUSED === $audit['status'] ) {
+				$orphans[] = $audit;
+			}
+		}
+
+		if ( empty( $orphans ) ) {
+			WP_CLI::success( 'Keine verwaisten Medien gefunden. Deine Mediathek ist sauber!' );
+			return;
+		}
+
+		$total_bytes = array_sum( array_column( $orphans, 'disk_bytes' ) );
+		WP_CLI::line( sprintf( '%d vollständig verwaiste Medien gefunden (%s belegter Speicher).', count( $orphans ), size_format( $total_bytes ) ) );
+
+		if ( ! $yes ) {
+			$action_desc = $force ? 'DAUERHAFT LÖSCHEN' : 'in den Papierkorb verschieben';
+			WP_CLI::confirm( sprintf( 'Möchtest du %d verwaiste Medien jetzt %s?', count( $orphans ), $action_desc ) );
+		}
+
+		$progress = \WP_CLI\Utils\make_progress_bar( 'Bereinige Medien', count( $orphans ) );
+		$cleaned = 0;
+
+		foreach ( $orphans as $orphan ) {
+			if ( MediaAuditor::trash_attachment( $orphan['id'], $force ) ) {
+				$cleaned++;
+			}
+			$progress->tick();
+		}
+		$progress->finish();
+
+		WP_CLI::success( sprintf( '%d verwaiste Medien erfolgreich bereinigt! %s Speicherplatz freigegeben.', $cleaned, size_format( $total_bytes ) ) );
 	}
 }
 

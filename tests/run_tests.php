@@ -329,15 +329,84 @@ namespace {
 		}
 	}
 
+	$GLOBALS['wp_test_posts'] = [];
+	if ( ! function_exists( 'get_post' ) ) {
+		function get_post( $post = null ) {
+			if ( is_object( $post ) ) {
+				return $post;
+			}
+			$id = (int) $post;
+			return $GLOBALS['wp_test_posts'][ $id ] ?? (object) [
+				'ID'             => $id,
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'image/jpeg',
+				'post_parent'    => 0,
+				'post_status'    => 'inherit',
+				'post_title'     => 'Mock Attachment ' . $id,
+			];
+		}
+	}
+
+	if ( ! function_exists( 'get_the_title' ) ) {
+		function get_the_title( $post = 0 ): string {
+			$p = get_post( $post );
+			return $p ? (string) ( $p->post_title ?? '' ) : '';
+		}
+	}
+
+	if ( ! function_exists( 'get_the_date' ) ) {
+		function get_the_date( $format = '', $post = null ): string {
+			return '2026-10-21 12:00';
+		}
+	}
+
+	if ( ! function_exists( 'get_theme_mod' ) ) {
+		function get_theme_mod( $name, $default_val = false ) {
+			return $GLOBALS['wp_test_theme_mods'][ $name ] ?? $default_val;
+		}
+	}
+
+	if ( ! function_exists( 'wp_get_attachment_image_url' ) ) {
+		function wp_get_attachment_image_url( $id, $size = 'thumbnail' ) {
+			return "https://example.com/wp-content/uploads/image-{$id}-150x150.jpg";
+		}
+	}
+
+	if ( ! function_exists( 'wp_get_attachment_url' ) ) {
+		function wp_get_attachment_url( $id ) {
+			return "https://example.com/wp-content/uploads/image-{$id}.jpg";
+		}
+	}
+
+	if ( ! function_exists( 'wp_delete_attachment' ) ) {
+		function wp_delete_attachment( $post_id, $force_delete = false ) {
+			return true;
+		}
+	}
+
+	if ( ! function_exists( 'wp_untrash_post' ) ) {
+		function wp_untrash_post( $post_id = 0 ) {
+			return true;
+		}
+	}
+
 	class MockWpdb {
-		public string $posts    = 'wp_posts';
-		public string $postmeta = 'wp_postmeta';
+		public string $posts     = 'wp_posts';
+		public string $postmeta  = 'wp_postmeta';
+		public string $termmeta  = 'wp_termmeta';
+		public string $terms     = 'wp_terms';
+		public string $term_taxonomy = 'wp_term_taxonomy';
 
 		public function get_var( $query ) {
 			return 10;
 		}
 
 		public function get_results( $query ) {
+			if ( str_contains( $query, '_thumbnail_id' ) ) {
+				return [
+					(object) [ 'ID' => 42, 'post_title' => 'Beispielbeitrag', 'post_type' => 'post' ],
+				];
+			}
 			return [
 				(object) [
 					'post_id'    => 1,
@@ -354,6 +423,10 @@ namespace {
 
 		public function prepare( $query, ...$args ) {
 			return $query;
+		}
+
+		public function esc_like( $text ) {
+			return addcslashes( (string) $text, '_%\\' );
 		}
 	}
 	$GLOBALS['wpdb'] = new MockWpdb();
@@ -372,6 +445,7 @@ namespace HA_Image_Optimizer_Tests {
 	use ha\ImageOptimizer\Delivery\ContentFilter;
 	use ha\ImageOptimizer\Delivery\HtaccessManager;
 	use ha\ImageOptimizer\Bulk\ProgressTracker;
+	use ha\ImageOptimizer\Auditor\MediaAuditor;
 
 	class TestRunner {
 
@@ -398,6 +472,7 @@ namespace HA_Image_Optimizer_Tests {
 			$this->testContentFilter();
 			$this->testHtaccessManager();
 			$this->testProgressTracker();
+			$this->testMediaAuditor();
 			$this->testTranslations();
 
 			echo "\n---------------------------------------------------------\n";
@@ -644,8 +719,67 @@ namespace HA_Image_Optimizer_Tests {
 			$this->assert( is_array( $queue ) && count( $queue ) === 3, 'ProgressTracker retrieves unoptimized queue items' );
 		}
 
+		private function testMediaAuditor(): void {
+			echo "\n11. Testing MediaAuditor (Orphan & Inactive Detection)...\n";
+
+			$queue = MediaAuditor::get_audit_queue();
+			$this->assert( is_array( $queue ) && count( $queue ) === 3, 'MediaAuditor retrieved media queue' );
+
+			// Mock attachment 1: featured image found in post 42
+			$auditUsed = MediaAuditor::audit_attachment( 1 );
+			$this->assert( MediaAuditor::STATUS_USED === $auditUsed['status'], 'Detected used attachment with featured image reference' );
+			$this->assert( ! empty( $auditUsed['references'] ), 'Contains detailed reference labels' );
+
+			// Test caching and metric calculation
+			$mockItems = [
+				[
+					'id'         => 10,
+					'filename'   => 'used.jpg',
+					'status'     => MediaAuditor::STATUS_USED,
+					'disk_bytes' => 50000,
+					'references' => [ 'Beitragsbild in #42' ],
+				],
+				[
+					'id'         => 11,
+					'filename'   => 'orphan.jpg',
+					'status'     => MediaAuditor::STATUS_UNATTACHED_UNUSED,
+					'disk_bytes' => 120000,
+					'references' => [],
+				],
+				[
+					'id'           => 12,
+					'filename'     => 'inactive.jpg',
+					'status'       => MediaAuditor::STATUS_ATTACHED_UNUSED,
+					'disk_bytes'   => 80000,
+					'parent_id'    => 5,
+					'parent_title' => 'Alter Post',
+					'references'   => [],
+				],
+			];
+
+			$summary = MediaAuditor::update_cached_results( $mockItems );
+			$this->assert( 3 === $summary['counts']['total'], 'Summary counts total audited items' );
+			$this->assert( 1 === $summary['counts']['unattached_unused'], 'Summary counts unattached unused items' );
+			$this->assert( 1 === $summary['counts']['attached_unused'], 'Summary counts attached unused items' );
+			$this->assert( 1 === $summary['counts']['used'], 'Summary counts active items' );
+			$this->assert( 200000 === $summary['reclaimable_bytes']['total'], 'Calculated reclaimable storage accurately (120KB + 80KB = 200KB)' );
+
+			$trashResult = MediaAuditor::trash_attachment( 11 );
+			$this->assert( $trashResult, 'Successfully trashed orphan attachment' );
+
+			$cached = MediaAuditor::get_cached_results();
+			$this->assert( ! isset( $cached['items'][11] ), 'Trashed attachment removed from cached audit index' );
+
+			$restoreResult = MediaAuditor::restore_attachment( 11 );
+			$this->assert( $restoreResult, 'Successfully restored attachment' );
+
+			MediaAuditor::clear_results();
+			$cleared = MediaAuditor::get_cached_results();
+			$this->assert( empty( $cleared['items'] ), 'Audit cache cleared successfully' );
+		}
+
 		private function testTranslations(): void {
-			echo "\n11. Testing Language Files Integrity (26 Locales)...\n";
+			echo "\n12. Testing Language Files Integrity (26 Locales)...\n";
 
 			$potFile = $this->rootDir . '/languages/ha-image-optimizer.pot';
 			$this->assert( file_exists( $potFile ), 'Template ha-image-optimizer.pot exists' );

@@ -17,6 +17,19 @@ $delete_data_on_uninstall = (bool) get_option( 'ha_io_delete_data_on_uninstall',
 ?>
 
 <div class="wrap ha-io-wrap">
+	<!-- Navigation Tabs Header -->
+	<nav class="nav-tab-wrapper ha-io-nav-tabs">
+		<a href="<?php echo esc_url( admin_url( 'options-general.php?page=ha-image-optimizer' ) ); ?>" class="nav-tab nav-tab-active">
+			⚙️ <?php esc_html_e( 'Einstellungen', 'ha-image-optimizer' ); ?>
+		</a>
+		<a href="<?php echo esc_url( admin_url( 'upload.php?page=ha-image-optimizer-bulk' ) ); ?>" class="nav-tab">
+			⚡ <?php esc_html_e( 'Massenoptimierung', 'ha-image-optimizer' ); ?>
+		</a>
+		<a href="<?php echo esc_url( admin_url( 'upload.php?page=ha-image-optimizer-auditor' ) ); ?>" class="nav-tab">
+			🔍 <?php esc_html_e( 'Verwaiste Medien (Auditor)', 'ha-image-optimizer' ); ?>
+		</a>
+	</nav>
+
 	<h1>⚡ <?php esc_html_e( 'HA Image Optimizer: Einstellungen & System-Status', 'ha-image-optimizer' ); ?></h1>
 
 	<?php if ( isset( $_GET['updated'] ) ) : ?>

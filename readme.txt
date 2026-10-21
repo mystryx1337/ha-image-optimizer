@@ -5,7 +5,7 @@ Tags: image optimizer, webp, avif, compression, performance, media library
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -18,6 +18,7 @@ HA Image Optimizer ist ein vollständig selbst gehostetes, werbefreies und resso
 = Kernfunktionen =
 * **Duale Kompressionsstrategie**: Originale standardmäßig verlustfrei (Lossless), Zwischengrößen smart verlustbehaftet (~82%).
 * **Next-Gen Formate**: Automatische Erzeugung von WebP und AVIF für Master-Bilder und alle Thumbnails.
+* **Medien-Auditor (Verwaiste Medien)**: Intelligente Tiefenanalyse spürt ungenutzte und verwaiste Bilder auf (prüft Beitragsbilder, WooCommerce-Produktgalerien, Gutenberg-Blöcke, Fließtext, Page-Builder, Header-Logos & Favicons) und gibt Ballast-Speicherplatz frei.
 * **Flexible Auslieferung**: Wahlweise universelle <picture>-Tag Ersetzung (inkl. CSS image-set()) oder 0 ms PHP-Overhead via .htaccess Server-Rewrites (Apache & LiteSpeed).
 * **Backup & 1-Click Restore**: Sichert Originale in einem geschützten Verzeichnis und erlaubt jederzeitige Wiederherstellung.
 * **SizeGuard**: Schutz vor negativer Ersparnis (neue Dateien werden verworfen, falls sie größer als das Original wären).
@@ -30,7 +31,7 @@ HA Image Optimizer ist ein vollständig selbst gehostetes, werbefreies und resso
 1. Lade den Ordner `ha-image-optimizer` in das Verzeichnis `/wp-content/plugins/` hoch.
 2. Aktiviere das Plugin im WordPress-Menü unter 'Plugins'.
 3. Gehe zu 'Einstellungen -> HA Image Optimizer', um Optionen anzupassen.
-4. Starte die Massenoptimierung unter 'Medien -> Massenoptimierung'.
+4. Starte die Massenoptimierung unter 'Medien -> Massenoptimierung' oder spüre ungenutzte Bilder unter 'Medien -> Verwaiste Medien' auf.
 
 == Frequently Asked Questions ==
 
@@ -41,6 +42,15 @@ Nein. Das Plugin arbeitet zu 100% lokal auf deinem Webserver über PHP Imagick o
 Gemäß den HA-Standards werden deine Backups und WebP-Dateien standardmäßig geschützt und nicht gelöscht. In den Einstellungen gibt es einen expliziten Schalter für die vollständige Bereinigung bei Deinstallation.
 
 == Changelog ==
+
+= 1.2.0 =
+* Neu: Intelligenter Medien-Auditor ("Verwaiste Medien") unter Medien -> Verwaiste Medien.
+* Neu: 3-Stufen-Statusklassifizierung: Aktiv verwendet, Zugeordnet aber inaktiv, Vollständig verwaist.
+* Neu: Automatische Tiefenprüfung auf Beitragsbilder, WooCommerce-Produktgalerien, Gutenberg-Blockattribute, HTML <img>-Tags, Upload-URLs, Page-Builder (Elementor), Site-Icon, Header-Logo und Taxonomien.
+* Neu: Exakte Berechnung des freigebbaren Festplattenspeichers (Master-Datei + alle Zwischengrößen + WebP/AVIF-Dateien).
+* Neu: Sicheres Verschieben verwaister Dateien in den WordPress-Papierkorb (mit 1-Klick-Wiederherstellung) und Sammel-Aktionen.
+* Neu: WP-CLI Befehle `wp ha-optimizer audit` und `wp ha-optimizer clean-orphans`.
+* Neu: Nahtlose Header-Navigation (Tabs) zwischen Einstellungen, Massenoptimierung und Medien-Auditor.
 
 = 1.1.1 =
 * Fix: Behebung von 40-Sekunden Gateway-Timeouts bei Massenoptimierung großer Mediatheken durch Umstellung der Batch-Größe auf 1 Attachment pro AJAX-Request.

@@ -11,6 +11,7 @@ use ha\ImageOptimizer\Common\Settings;
 use ha\ImageOptimizer\Common\Environment;
 use ha\ImageOptimizer\Bulk\ProgressTracker;
 use ha\ImageOptimizer\Media\CustomFolderProcessor;
+use ha\ImageOptimizer\Auditor\MediaAuditor;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -52,6 +53,13 @@ class AdminPage {
 			esc_html__( '⚡ Massenoptimierung', 'ha-image-optimizer' )
 		);
 
+		$auditor_link = sprintf(
+			'<a href="%s" style="color: #8250df;">%s</a>',
+			esc_url( admin_url( 'upload.php?page=ha-image-optimizer-auditor' ) ),
+			esc_html__( '🔍 Verwaiste Medien', 'ha-image-optimizer' )
+		);
+
+		array_unshift( $links, $auditor_link );
 		array_unshift( $links, $bulk_link );
 		array_unshift( $links, $settings_link );
 
@@ -81,6 +89,15 @@ class AdminPage {
 			'ha-image-optimizer-bulk',
 			[ __CLASS__, 'render_bulk_page' ]
 		);
+
+		// Media Auditor under Media
+		add_media_page(
+			esc_html__( 'Verwaiste Medien', 'ha-image-optimizer' ),
+			esc_html__( 'Verwaiste Medien', 'ha-image-optimizer' ),
+			'manage_options',
+			'ha-image-optimizer-auditor',
+			[ __CLASS__, 'render_auditor_page' ]
+		);
 	}
 
 	/**
@@ -94,6 +111,7 @@ class AdminPage {
 		$relevant_hooks = [
 			'settings_page_ha-image-optimizer',
 			'media_page_ha-image-optimizer-bulk',
+			'media_page_ha-image-optimizer-auditor',
 			'upload.php',
 			'post.php',
 		];
@@ -132,6 +150,29 @@ class AdminPage {
 				'resume'       => esc_html__( 'Fortsetzen', 'ha-image-optimizer' ),
 			],
 		] );
+
+		if ( 'media_page_ha-image-optimizer-auditor' === $hook ) {
+			wp_enqueue_script(
+				'ha-io-auditor-script',
+				HA_IO_URL . 'assets/js/media-auditor.js',
+				[ 'jquery' ],
+				$version,
+				true
+			);
+
+			wp_localize_script( 'ha-io-auditor-script', 'ha_io_audit_vars', [
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce'    => wp_create_nonce( 'ha_io_admin_nonce' ),
+				'i18n'     => [
+					'scanning'      => esc_html__( 'Scanne Mediathek...', 'ha-image-optimizer' ),
+					'completed'     => esc_html__( 'Scan abgeschlossen!', 'ha-image-optimizer' ),
+					'error'         => esc_html__( 'Ein Fehler ist aufgetreten.', 'ha-image-optimizer' ),
+					'confirm_trash' => esc_html__( 'Dieses Bild wirklich in den Papierkorb verschieben?', 'ha-image-optimizer' ),
+					'confirm_bulk'  => esc_html__( 'Alle ausgewählten Bilder wirklich in den Papierkorb verschieben?', 'ha-image-optimizer' ),
+					'trashed'       => esc_html__( 'In Papierkorb verschoben', 'ha-image-optimizer' ),
+				],
+			] );
+		}
 
 		if ( function_exists( 'wp_set_script_translations' ) ) {
 			wp_set_script_translations( 'ha-io-bulk-script', 'ha-image-optimizer', HA_IO_PATH . 'languages' );
@@ -173,6 +214,24 @@ class AdminPage {
 		$custom_stats = CustomFolderProcessor::get_stats();
 
 		$template_path = HA_IO_PATH . 'templates/bulk-optimizer-page.php';
+		if ( file_exists( $template_path ) ) {
+			include $template_path;
+		}
+	}
+
+	/**
+	 * Render media auditor page.
+	 *
+	 * @return void
+	 */
+	public static function render_auditor_page(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Keine Berechtigung.', 'ha-image-optimizer' ) );
+		}
+
+		$audit_data    = MediaAuditor::get_cached_results();
+		$template_path = HA_IO_PATH . 'templates/media-auditor-page.php';
+
 		if ( file_exists( $template_path ) ) {
 			include $template_path;
 		}
