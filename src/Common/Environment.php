@@ -67,19 +67,26 @@ class Environment {
 		}
 
 		// Server Software
-		$server_software = isset( $_SERVER['SERVER_SOFTWARE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) : '';
+		$raw_software    = $_SERVER['SERVER_SOFTWARE'] ?? '';
+		$server_software = sanitize_text_field( function_exists( 'wp_unslash' ) ? wp_unslash( $raw_software ) : (string) $raw_software );
 		$is_apache       = stripos( $server_software, 'apache' ) !== false;
 		$is_litespeed    = stripos( $server_software, 'litespeed' ) !== false;
 		$is_nginx        = stripos( $server_software, 'nginx' ) !== false;
 
 		// Memory Limit
-		$memory_limit_raw = ini_get( 'memory_limit' );
-		$memory_bytes     = wp_convert_hr_to_bytes( $memory_limit_raw );
+		$memory_limit_raw = (string) ( ini_get( 'memory_limit' ) ?: '256M' );
+		$memory_bytes     = function_exists( 'wp_convert_hr_to_bytes' )
+			? wp_convert_hr_to_bytes( $memory_limit_raw )
+			: self::convert_hr_to_bytes( $memory_limit_raw );
 		$memory_ok        = ( -1 === $memory_bytes || $memory_bytes >= 128 * 1024 * 1024 );
 
 		// Uploads directory writeability
-		$upload_dir   = wp_upload_dir();
-		$can_write    = ! empty( $upload_dir['basedir'] ) && wp_is_writable( $upload_dir['basedir'] );
+		$upload_dir = wp_upload_dir();
+		$can_write  = ! empty( $upload_dir['basedir'] ) && (
+			function_exists( 'wp_is_writable' )
+				? wp_is_writable( $upload_dir['basedir'] )
+				: is_writable( $upload_dir['basedir'] )
+		);
 
 		// Best available driver
 		$best_driver = 'none';
@@ -169,4 +176,35 @@ class Environment {
 		$caps = self::get_capabilities();
 		return (bool) $caps['server']['supports_htaccess'];
 	}
+
+	/**
+	 * Convert shorthand byte string to integer bytes.
+	 *
+	 * @param string $value Shorthand string (e.g. '256M', '1G').
+	 * @return int Byte count.
+	 */
+	public static function convert_hr_to_bytes( string $value ): int {
+		$value = trim( $value );
+		if ( '-1' === $value || -1 === (int) $value ) {
+			return -1;
+		}
+
+		$last = strtolower( $value[ strlen( $value ) - 1 ] );
+		$val  = (int) $value;
+
+		switch ( $last ) {
+			case 'g':
+				$val *= 1024 * 1024 * 1024;
+				break;
+			case 'm':
+				$val *= 1024 * 1024;
+				break;
+			case 'k':
+				$val *= 1024;
+				break;
+		}
+
+		return $val;
+	}
 }
+
