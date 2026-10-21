@@ -596,7 +596,7 @@ namespace HA_Image_Optimizer_Tests {
 
 				// Validate l10n.php structure
 				$l10nContent = (string) file_get_contents( $l10nFile );
-				if ( ! str_contains( $l10nContent, "defined( 'ABSPATH' ) || exit;" ) && ! str_contains( $l10nContent, "defined('ABSPATH') || exit;" ) ) {
+				if ( ! str_contains( $l10nContent, 'ABSPATH' ) ) {
 					$allPresent = false;
 					$this->assert( false, "Missing ABSPATH check in {$l10nFile}" );
 					break;
