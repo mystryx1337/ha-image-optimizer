@@ -451,7 +451,30 @@ class MediaAuditor {
 			}
 		}
 
-		// Recalculate summary metrics
+		return self::recalculate_and_save( $cache );
+	}
+
+	/**
+	 * Remove a single ID from cached audit results.
+	 *
+	 * @param int $attachment_id Attachment ID.
+	 * @return void
+	 */
+	public static function remove_from_cached_results( int $attachment_id ): void {
+		$cache = self::get_cached_results();
+		if ( isset( $cache['items'][ $attachment_id ] ) ) {
+			unset( $cache['items'][ $attachment_id ] );
+			self::recalculate_and_save( $cache );
+		}
+	}
+
+	/**
+	 * Recalculate summary metrics and save cache to WordPress options.
+	 *
+	 * @param array<string, mixed> $cache Cache data array.
+	 * @return array<string, mixed>
+	 */
+	private static function recalculate_and_save( array $cache ): array {
 		$counts = [
 			'total'             => count( $cache['items'] ),
 			'used'              => 0,
@@ -489,20 +512,6 @@ class MediaAuditor {
 
 		update_option( self::OPTION_RESULTS, $cache, false );
 		return $cache;
-	}
-
-	/**
-	 * Remove a single ID from cached audit results.
-	 *
-	 * @param int $attachment_id Attachment ID.
-	 * @return void
-	 */
-	public static function remove_from_cached_results( int $attachment_id ): void {
-		$cache = self::get_cached_results();
-		if ( isset( $cache['items'][ $attachment_id ] ) ) {
-			unset( $cache['items'][ $attachment_id ] );
-			self::update_cached_results( [] );
-		}
 	}
 
 	/**
