@@ -45,7 +45,7 @@ class Settings {
 			'optimize_custom_folders'      => true,
 			'custom_folders'               => 'themes',
 			'auditor_generic_db_scan'      => true,
-			'auditor_safety_buffer_days'   => 14,
+			'auditor_safety_buffer_days'   => 0,
 			'auditor_custom_tables'        => '',
 		];
 	}
@@ -160,7 +160,7 @@ class Settings {
 		$clean['auditor_generic_db_scan'] = ! empty( $input['auditor_generic_db_scan'] );
 
 		$safety_days = isset( $input['auditor_safety_buffer_days'] ) ? absint( $input['auditor_safety_buffer_days'] ) : $defaults['auditor_safety_buffer_days'];
-		$clean['auditor_safety_buffer_days'] = ( $safety_days >= 0 && $safety_days <= 365 ) ? $safety_days : 14;
+		$clean['auditor_safety_buffer_days'] = ( $safety_days >= 0 && $safety_days <= 365 ) ? $safety_days : 0;
 
 		$raw_tbls    = (string) ( $input['auditor_custom_tables'] ?? '' );
 		$clean_tbls  = [];

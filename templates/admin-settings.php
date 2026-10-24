@@ -316,11 +316,11 @@ $delete_data_on_uninstall = (bool) get_option( 'ha_io_delete_data_on_uninstall',
 					<th scope="row"><?php esc_html_e( 'Schutzfrist für neue Uploads', 'ha-image-optimizer' ); ?></th>
 					<td>
 						<label>
-							<input type="number" name="ha_io_settings[auditor_safety_buffer_days]" value="<?php echo esc_attr( $settings['auditor_safety_buffer_days'] ?? 14 ); ?>" min="0" max="365" style="width: 80px;">
+							<input type="number" name="ha_io_settings[auditor_safety_buffer_days]" value="<?php echo esc_attr( $settings['auditor_safety_buffer_days'] ?? 0 ); ?>" min="0" max="365" style="width: 80px;">
 							<?php esc_html_e( 'Tage', 'ha-image-optimizer' ); ?>
 						</label>
 						<p class="description">
-							<?php esc_html_e( 'Bilder, die innerhalb dieses Zeitraums hochgeladen wurden, werden automatisch vor dem Löschen geschützt, auch wenn sie noch nicht veröffentlicht wurden (Standard: 14 Tage, 0 zum Deaktivieren).', 'ha-image-optimizer' ); ?>
+							<?php esc_html_e( 'Bilder, die innerhalb dieses Zeitraums hochgeladen wurden, werden vor dem Löschen geschützt, auch wenn sie noch nicht veröffentlicht wurden (0 = deaktiviert, z. B. 14 Tage empfohlen für aktive Redaktionen).', 'ha-image-optimizer' ); ?>
 						</p>
 					</td>
 				</tr>

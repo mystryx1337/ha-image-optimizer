@@ -449,10 +449,6 @@ class MediaAuditor {
 			$pm_clauses[] = 'pm.meta_value LIKE %s';
 			$pm_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
 		}
-		if ( strlen( $filename ) >= 6 ) {
-			$pm_clauses[] = 'pm.meta_value LIKE %s';
-			$pm_params[]  = '%' . $wpdb->esc_like( $filename ) . '%';
-		}
 
 		$where_pm = implode( ' OR ', $pm_clauses );
 		$other_postmeta = $wpdb->get_results(
@@ -460,11 +456,15 @@ class MediaAuditor {
 				"SELECT p.ID, p.post_title, p.post_type, pm.meta_key
 				FROM {$wpdb->postmeta} pm
 				INNER JOIN {$wpdb->posts} p ON (pm.post_id = p.ID)
-				WHERE pm.meta_key NOT IN ('_thumbnail_id', '_product_image_gallery', '_elementor_data', '_elementor_page_settings', '_elementor_css', '_ha_io_data')
+				WHERE pm.post_id != %d
+				AND p.post_type NOT IN ('attachment', 'revision')
+				AND pm.meta_key NOT LIKE '_wp_%'
+				AND pm.meta_key NOT IN ('_thumbnail_id', '_product_image_gallery', '_elementor_data', '_elementor_page_settings', '_elementor_css', '_ha_io_data')
 				AND pm.meta_key NOT LIKE '_acf_%'
 				AND p.post_status != 'trash'
 				AND ({$where_pm})
 				LIMIT 3",
+				$attachment_id,
 				...$pm_params
 			)
 		);
@@ -782,11 +782,6 @@ class MediaAuditor {
 						$tbl_clauses[] = "`{$col}` LIKE %s";
 						$tbl_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
 					}
-
-					if ( strlen( $filename ) >= 6 ) {
-						$tbl_clauses[] = "`{$col}` LIKE %s";
-						$tbl_params[]  = '%' . $wpdb->esc_like( $filename ) . '%';
-					}
 				}
 
 				if ( empty( $tbl_clauses ) ) {
@@ -888,11 +883,6 @@ class MediaAuditor {
 			if ( ! empty( $rel_file ) ) {
 				$opt_clauses[] = 'option_value LIKE %s';
 				$opt_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
-			}
-
-			if ( strlen( $filename ) >= 6 ) {
-				$opt_clauses[] = 'option_value LIKE %s';
-				$opt_params[]  = '%' . $wpdb->esc_like( $filename ) . '%';
 			}
 
 			$where_opts = implode( ' OR ', $opt_clauses );
@@ -1152,6 +1142,17 @@ class MediaAuditor {
 			'%matomo%',
 			'%transient%',
 			'%ha_io_%',
+			'%smush%',
+			'%ewww%',
+			'%imagify%',
+			'%shortpixel%',
+			'%optimus%',
+			'%webp%',
+			'%relevanssi%',
+			'%searchwp%',
+			'%backup%',
+			'%updraft%',
+			'%duplicator%',
 		];
 
 		$ignored_patterns = function_exists( 'apply_filters' )

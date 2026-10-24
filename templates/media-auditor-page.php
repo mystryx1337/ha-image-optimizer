@@ -40,9 +40,12 @@ $last_scan   = ! empty( $audit_data['last_scan'] ) ? date_i18n( 'd.m.Y H:i', (in
 		<span style="background: #e7f3ff; color: #0969da; padding: 4px 10px; border-radius: 12px; font-weight: 500;">
 			🌐 <?php esc_html_e( 'Universeller DB-Scan: Aktiv', 'ha-image-optimizer' ); ?>
 		</span>
-		<span style="background: #dafbe1; color: #1a7f37; padding: 4px 10px; border-radius: 12px; font-weight: 500;">
-			🛡️ <?php printf( esc_html__( 'Schutzfrist für neue Uploads: %d Tage', 'ha-image-optimizer' ), (int) \ha\ImageOptimizer\Common\Settings::get( 'auditor_safety_buffer_days', 14 ) ); ?>
-		</span>
+		<?php $cur_safety = (int) \ha\ImageOptimizer\Common\Settings::get( 'auditor_safety_buffer_days', 0 ); ?>
+		<?php if ( $cur_safety > 0 ) : ?>
+			<span style="background: #dafbe1; color: #1a7f37; padding: 4px 10px; border-radius: 12px; font-weight: 500;">
+				🛡️ <?php printf( esc_html__( 'Schutzfrist für neue Uploads: %d Tage', 'ha-image-optimizer' ), $cur_safety ); ?>
+			</span>
+		<?php endif; ?>
 		<a href="<?php echo esc_url( admin_url( 'options-general.php?page=ha-image-optimizer#ha-io-auditor-settings' ) ); ?>" style="text-decoration: underline; color: #666;">
 			⚙️ <?php esc_html_e( 'Auditor-Einstellungen anpassen', 'ha-image-optimizer' ); ?>
 		</a>

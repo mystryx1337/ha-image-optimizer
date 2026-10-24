@@ -705,7 +705,7 @@ namespace HA_Image_Optimizer_Tests {
 			$this->assert( true === $defaults['backup_originals'], 'Default backup_originals is true' );
 			$this->assert( 'themes' === $defaults['custom_folders'], 'Default custom_folders is themes' );
 			$this->assert( true === $defaults['auditor_generic_db_scan'], 'Default auditor_generic_db_scan is true' );
-			$this->assert( 14 === $defaults['auditor_safety_buffer_days'], 'Default auditor_safety_buffer_days is 14' );
+			$this->assert( 0 === $defaults['auditor_safety_buffer_days'], 'Default auditor_safety_buffer_days is 0' );
 
 			// Test Sanitization and Path Traversal Prevention
 			$dirty = [
@@ -913,6 +913,16 @@ namespace HA_Image_Optimizer_Tests {
 			$this->assert( $hasGenericMeta, 'Generic postmeta scanner identified unknown custom postmeta reference' );
 
 			// Test Safety Buffer: recently uploaded image (2 days old) protected from deletion
+			// Verify that an old unattached file with 0 references is correctly classified as orphan
+			$auditOrphan = MediaAuditor::audit_attachment( 11 );
+			$this->assert( MediaAuditor::STATUS_UNATTACHED_UNUSED === $auditOrphan['status'], 'Unused attachment is classified as unattached_unused' );
+			$this->assert( empty( $auditOrphan['references'] ), 'Orphan attachment has no false references' );
+
+			// Test Safety Buffer: recently uploaded image (2 days old) protected from deletion when safety period is active
+			add_filter( 'ha_io_audit_safety_period_days', function() {
+				return 14;
+			} );
+
 			$GLOBALS['wp_test_posts'][99] = (object) [
 				'ID'             => 99,
 				'post_type'      => 'attachment',
