@@ -496,7 +496,7 @@ namespace {
 				return [];
 			}
 			if ( str_contains( $query, '_thumbnail_id' ) ) {
-				if ( str_contains( $query, 'pm.meta_value = 1' ) || str_contains( $query, "pm.meta_value = '1'" ) || str_contains( $query, 'meta_value = 1' ) ) {
+				if ( preg_match( '/meta_value\s*=\s*[\'"]?1\b/', $query ) ) {
 					return [
 						(object) [ 'ID' => 42, 'post_title' => 'Beispielbeitrag', 'post_type' => 'post' ],
 					];
@@ -504,7 +504,7 @@ namespace {
 				return [];
 			}
 			if ( str_contains( $query, 'nextend2_smartslider3_slides' ) ) {
-				if ( str_contains( $query, '1' ) ) {
+				if ( preg_match( '/"imageId":\s*[\'"]?1\b/', $query ) ) {
 					return [
 						(object) [
 							'id'           => 101,
