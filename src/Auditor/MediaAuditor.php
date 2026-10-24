@@ -39,6 +39,13 @@ class MediaAuditor {
 	private static ?array $theme_files_cache = null;
 
 	/**
+	 * In-memory cache for custom third-party plugin tables (Smart Slider, RevSlider, LayerSlider).
+	 *
+	 * @var array<string, string>|null
+	 */
+	private static ?array $custom_tables_cache = null;
+
+	/**
 	 * Get list of all eligible media attachment IDs to audit.
 	 *
 	 * @return array<int>
@@ -433,7 +440,285 @@ class MediaAuditor {
 		}
 
 		// -------------------------------------------------------------
-		// 9. Status Classification & Deduplication
+		// 9. Slider Plugins (Smart Slider 3, Slider Revolution, LayerSlider)
+		// -------------------------------------------------------------
+		// Smart Slider 3 (Nextend)
+		$table_smart_slides = self::get_custom_table( '%smartslider%slides' );
+		if ( $table_smart_slides ) {
+			$table_smart_sliders = self::get_custom_table( '%smartslider%sliders' );
+
+			$ss_clauses = [];
+			$ss_params  = [];
+
+			if ( ! empty( $rel_file ) ) {
+				$ss_clauses[] = 's.params LIKE %s';
+				$ss_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
+
+				$ss_clauses[] = 's.thumbnail LIKE %s';
+				$ss_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
+			}
+
+			if ( strlen( $filename ) >= 5 ) {
+				$ss_clauses[] = 's.params LIKE %s';
+				$ss_params[]  = '%' . $wpdb->esc_like( $filename ) . '%';
+
+				$ss_clauses[] = 's.thumbnail LIKE %s';
+				$ss_params[]  = '%' . $wpdb->esc_like( $filename ) . '%';
+			}
+
+			$id_patterns = [
+				'%"imageId":' . $attachment_id . '%',
+				'%"image_id":' . $attachment_id . '%',
+				'%"imageId":"' . $attachment_id . '"%',
+				'%"image_id":"' . $attachment_id . '"%',
+				'%"id":' . $attachment_id . '%',
+				'%"id":"' . $attachment_id . '"%',
+			];
+
+			foreach ( $id_patterns as $id_pat ) {
+				$ss_clauses[] = 's.params LIKE %s';
+				$ss_params[]  = $id_pat;
+			}
+
+			if ( ! empty( $ss_clauses ) ) {
+				$where_ss = implode( ' OR ', $ss_clauses );
+
+				if ( $table_smart_sliders ) {
+					$ss_sql = $wpdb->prepare(
+						"SELECT s.id, s.slider, s.title, sl.title AS slider_title
+						FROM {$table_smart_slides} s
+						LEFT JOIN {$table_smart_sliders} sl ON (s.slider = sl.id)
+						WHERE ({$where_ss})
+						LIMIT 5",
+						...$ss_params
+					);
+				} else {
+					$ss_sql = $wpdb->prepare(
+						"SELECT s.id, s.slider, s.title, '' AS slider_title
+						FROM {$table_smart_slides} s
+						WHERE ({$where_ss})
+						LIMIT 5",
+						...$ss_params
+					);
+				}
+
+				$ss_rows = $wpdb->get_results( $ss_sql );
+				if ( ! empty( $ss_rows ) ) {
+					foreach ( $ss_rows as $sr ) {
+						$slider_name = ! empty( $sr->slider_title ) ? $sr->slider_title : ( 'Slider #' . ( $sr->slider ?? 0 ) );
+						$slide_name  = ! empty( $sr->title ) ? $sr->title : ( 'Slide #' . ( $sr->id ?? 0 ) );
+						$slider_id   = (int) ( $sr->slider ?? 0 );
+						$slide_id    = (int) ( $sr->id ?? 0 );
+
+						$references[] = [
+							'label' => sprintf(
+								/* translators: 1: slider title, 2: slide title, 3: slide ID */
+								__( 'Smart Slider 3: "%1$s" (Slide: "%2$s", #%3$d)', 'ha-image-optimizer' ),
+								$slider_name,
+								$slide_name,
+								$slide_id
+							),
+							'url'   => self::safe_admin_url( 'admin.php?page=smartslider3&sliderid=' . $slider_id . '&slideid=' . $slide_id ),
+						];
+					}
+				}
+			}
+
+			// Slider-level global settings / background
+			if ( $table_smart_sliders && ( ! empty( $rel_file ) || strlen( $filename ) >= 5 ) ) {
+				$ssl_clauses = [];
+				$ssl_params  = [];
+				if ( ! empty( $rel_file ) ) {
+					$ssl_clauses[] = 'params LIKE %s';
+					$ssl_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
+				}
+				if ( strlen( $filename ) >= 5 ) {
+					$ssl_clauses[] = 'params LIKE %s';
+					$ssl_params[]  = '%' . $wpdb->esc_like( $filename ) . '%';
+				}
+				if ( ! empty( $ssl_clauses ) ) {
+					$where_ssl = implode( ' OR ', $ssl_clauses );
+					$ssl_sql   = $wpdb->prepare(
+						"SELECT id, title FROM {$table_smart_sliders}
+						WHERE ({$where_ssl})
+						LIMIT 3",
+						...$ssl_params
+					);
+					$ssl_rows = $wpdb->get_results( $ssl_sql );
+					if ( ! empty( $ssl_rows ) ) {
+						foreach ( $ssl_rows as $slr ) {
+							$slider_title = ! empty( $slr->title ) ? $slr->title : ( 'Slider #' . ( $slr->id ?? 0 ) );
+							$slider_id    = (int) ( $slr->id ?? 0 );
+							$references[] = [
+								'label' => sprintf(
+									/* translators: 1: slider title, 2: slider ID */
+									__( 'Smart Slider 3 (Projekt-Hintergrund): "%1$s" (#%2$d)', 'ha-image-optimizer' ),
+									$slider_title,
+									$slider_id
+								),
+								'url'   => self::safe_admin_url( 'admin.php?page=smartslider3&sliderid=' . $slider_id ),
+							];
+						}
+					}
+				}
+			}
+		}
+
+		// Slider Revolution
+		$table_rev_slides = self::get_custom_table( '%revslider%slides' );
+		if ( $table_rev_slides ) {
+			$table_rev_sliders = self::get_custom_table( '%revslider%sliders' );
+			$rev_clauses = [];
+			$rev_params  = [];
+
+			if ( ! empty( $rel_file ) ) {
+				$rev_clauses[] = 's.params LIKE %s';
+				$rev_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
+				$rev_clauses[] = 's.layers LIKE %s';
+				$rev_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
+			}
+
+			if ( strlen( $filename ) >= 5 ) {
+				$rev_clauses[] = 's.params LIKE %s';
+				$rev_params[]  = '%' . $wpdb->esc_like( $filename ) . '%';
+				$rev_clauses[] = 's.layers LIKE %s';
+				$rev_params[]  = '%' . $wpdb->esc_like( $filename ) . '%';
+			}
+
+			$rev_clauses[] = 's.params LIKE %s';
+			$rev_params[]  = '%"image_id":' . $attachment_id . '%';
+
+			if ( ! empty( $rev_clauses ) ) {
+				$where_rev = implode( ' OR ', $rev_clauses );
+				if ( $table_rev_sliders ) {
+					$rev_sql = $wpdb->prepare(
+						"SELECT s.id, s.slider_id, sl.title AS slider_title
+						FROM {$table_rev_slides} s
+						LEFT JOIN {$table_rev_sliders} sl ON (s.slider_id = sl.id)
+						WHERE ({$where_rev})
+						LIMIT 5",
+						...$rev_params
+					);
+				} else {
+					$rev_sql = $wpdb->prepare(
+						"SELECT s.id, s.slider_id, '' AS slider_title
+						FROM {$table_rev_slides} s
+						WHERE ({$where_rev})
+						LIMIT 5",
+						...$rev_params
+					);
+				}
+
+				$rev_rows = $wpdb->get_results( $rev_sql );
+				if ( ! empty( $rev_rows ) ) {
+					foreach ( $rev_rows as $rr ) {
+						$slider_name = ! empty( $rr->slider_title ) ? $rr->slider_title : ( 'Slider #' . ( $rr->slider_id ?? 0 ) );
+						$slide_id    = (int) ( $rr->id ?? 0 );
+						$references[] = [
+							'label' => sprintf(
+								/* translators: 1: slider title, 2: slide ID */
+								__( 'Slider Revolution: "%1$s" (Slide #%2$d)', 'ha-image-optimizer' ),
+								$slider_name,
+								$slide_id
+							),
+							'url'   => self::safe_admin_url( 'admin.php?page=revslider&view=slide&id=' . $slide_id ),
+						];
+					}
+				}
+			}
+		}
+
+		// LayerSlider
+		$table_layerslider = self::get_custom_table( '%layerslider%' );
+		if ( $table_layerslider ) {
+			$ls_clauses = [];
+			$ls_params  = [];
+
+			if ( ! empty( $rel_file ) ) {
+				$ls_clauses[] = 'data LIKE %s';
+				$ls_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
+			}
+			if ( strlen( $filename ) >= 5 ) {
+				$ls_clauses[] = 'data LIKE %s';
+				$ls_params[]  = '%' . $wpdb->esc_like( $filename ) . '%';
+			}
+			$ls_clauses[] = 'data LIKE %s';
+			$ls_params[]  = '%"imageId":' . $attachment_id . '%';
+
+			if ( ! empty( $ls_clauses ) ) {
+				$where_ls = implode( ' OR ', $ls_clauses );
+				$ls_sql   = $wpdb->prepare(
+					"SELECT id, name FROM {$table_layerslider}
+					WHERE ({$where_ls})
+					LIMIT 3",
+					...$ls_params
+				);
+				$ls_rows = $wpdb->get_results( $ls_sql );
+				if ( ! empty( $ls_rows ) ) {
+					foreach ( $ls_rows as $lsr ) {
+						$name  = ! empty( $lsr->name ) ? $lsr->name : ( 'Slider #' . ( $lsr->id ?? 0 ) );
+						$ls_id = (int) ( $lsr->id ?? 0 );
+						$references[] = [
+							'label' => sprintf(
+								/* translators: 1: slider name, 2: slider ID */
+								__( 'LayerSlider: "%1$s" (#%2$d)', 'ha-image-optimizer' ),
+								$name,
+								$ls_id
+							),
+							'url'   => self::safe_admin_url( 'admin.php?page=layerslider&action=edit&id=' . $ls_id ),
+						];
+					}
+				}
+			}
+		}
+
+		// -------------------------------------------------------------
+		// 10. WordPress Widgets & Options (wp_options)
+		// -------------------------------------------------------------
+		if ( ! empty( $wpdb->options ) ) {
+			$opt_clauses = [
+				'option_value LIKE %s',
+			];
+			$opt_params  = [
+				'%i:' . $attachment_id . ';%',
+			];
+
+			if ( ! empty( $rel_file ) ) {
+				$opt_clauses[] = 'option_value LIKE %s';
+				$opt_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
+			}
+
+			$where_opts = implode( ' OR ', $opt_clauses );
+			$opts_sql   = $wpdb->prepare(
+				"SELECT option_name FROM {$wpdb->options}
+				WHERE option_name NOT LIKE '_transient%'
+				AND option_name NOT LIKE '_site_transient%'
+				AND option_name NOT LIKE '%_ha_io_%'
+				AND ({$where_opts})
+				LIMIT 3",
+				...$opt_params
+			);
+			$opt_rows = $wpdb->get_results( $opts_sql );
+
+			if ( ! empty( $opt_rows ) ) {
+				foreach ( $opt_rows as $orow ) {
+					$opt_name  = (string) ( $orow->option_name ?? '' );
+					$is_widget = str_starts_with( $opt_name, 'widget_' );
+					$label     = $is_widget
+						? sprintf( __( 'WordPress Widget ("%s")', 'ha-image-optimizer' ), $opt_name )
+						: sprintf( __( 'WordPress Option ("%s")', 'ha-image-optimizer' ), $opt_name );
+					$url       = $is_widget ? self::safe_admin_url( 'widgets.php' ) : self::safe_admin_url( 'options-general.php' );
+
+					$references[] = [
+						'label' => $label,
+						'url'   => $url,
+					];
+				}
+			}
+		}
+
+		// -------------------------------------------------------------
+		// 11. Status Classification & Deduplication
 		// -------------------------------------------------------------
 		$deduped = [];
 		$seen    = [];
@@ -536,6 +821,31 @@ class MediaAuditor {
 			return admin_url( $path );
 		}
 		return 'wp-admin/' . ltrim( $path, '/' );
+	}
+
+	/**
+	 * Find a custom table by LIKE pattern, cached in memory.
+	 *
+	 * @param string $pattern Table pattern, e.g. '%smartslider%slides'.
+	 * @return string|null Table name if exists, null otherwise.
+	 */
+	private static function get_custom_table( string $pattern ): ?string {
+		global $wpdb;
+
+		if ( null === self::$custom_tables_cache ) {
+			self::$custom_tables_cache = [];
+		}
+
+		if ( array_key_exists( $pattern, self::$custom_tables_cache ) ) {
+			return ! empty( self::$custom_tables_cache[ $pattern ] ) ? self::$custom_tables_cache[ $pattern ] : null;
+		}
+
+		$prefix       = ! empty( $wpdb->prefix ) ? $wpdb->prefix : 'wp_';
+		$full_pattern = $wpdb->esc_like( $prefix ) . $pattern;
+		$found        = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $full_pattern ) );
+
+		self::$custom_tables_cache[ $pattern ] = $found ? (string) $found : '';
+		return $found ? (string) $found : null;
 	}
 
 	/**
@@ -753,7 +1063,8 @@ class MediaAuditor {
 	 * @return bool
 	 */
 	public static function clear_results(): bool {
-		self::$theme_files_cache = null;
+		self::$theme_files_cache   = null;
+		self::$custom_tables_cache = null;
 		return delete_option( self::OPTION_RESULTS );
 	}
 }

@@ -19,5 +19,6 @@ scratch/
 # Build and package artifacts
 release/
 *.zip
+tests/fixtures/
 
 # Keep vendor/plugin-update-checker tracked as per HA standards!

@@ -5,7 +5,7 @@ Tags: image optimizer, webp, avif, compression, performance, media library
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -42,6 +42,12 @@ Nein. Das Plugin arbeitet zu 100% lokal auf deinem Webserver über PHP Imagick o
 Gemäß den HA-Standards werden deine Backups und WebP-Dateien standardmäßig geschützt und nicht gelöscht. In den Einstellungen gibt es einen expliziten Schalter für die vollständige Bereinigung bei Deinstallation.
 
 == Changelog ==
+
+= 1.2.2 =
+* Neu: Smart Slider 3 Schutz im Medien-Auditor: Vollständige Erkennung von Slider-Hintergründen, Bild-Ebenen (Layers), mobilen Varianten, Slider-Einstellungen und Thumbnails aus benutzerdefinierten Tabellen (nextend2_smartslider3_slides/sliders).
+* Neu: Detaillierte Nachweise für Smart Slider 3 inklusive Direkt-Links zum Bearbeiten des betroffenen Sliders bzw. Slides im WordPress-Admin.
+* Neu: Erweiterte Slider-Plugin-Unterstützung für Slider Revolution (revslider) und LayerSlider.
+* Neu: Tiefenprüfung von WordPress-Widgets und Optionen in der Tabelle wp_options (z. B. Bild-Widgets, Sidebar-Banner und Plugin-Optionen).
 
 = 1.2.1 =
 * Neu: Direkte Verlinkung gefundener Posts, Seiten, WooCommerce-Produkte, Theme-Customizer-Sektionen und Theme-Dateien in der Spalte "Fundorte & Verwendungs-Nachweise".

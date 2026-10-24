@@ -409,13 +409,24 @@ namespace {
 	}
 
 	class MockWpdb {
-		public string $posts     = 'wp_posts';
-		public string $postmeta  = 'wp_postmeta';
-		public string $termmeta  = 'wp_termmeta';
-		public string $terms     = 'wp_terms';
+		public string $prefix        = 'wp_';
+		public string $posts         = 'wp_posts';
+		public string $postmeta      = 'wp_postmeta';
+		public string $termmeta      = 'wp_termmeta';
+		public string $terms         = 'wp_terms';
 		public string $term_taxonomy = 'wp_term_taxonomy';
+		public string $options       = 'wp_options';
 
 		public function get_var( $query ) {
+			if ( is_string( $query ) && str_contains( $query, 'SHOW TABLES LIKE' ) ) {
+				if ( str_contains( $query, 'smartslider%slides' ) ) {
+					return 'wp_nextend2_smartslider3_slides';
+				}
+				if ( str_contains( $query, 'smartslider%sliders' ) ) {
+					return 'wp_nextend2_smartslider3_sliders';
+				}
+				return null;
+			}
 			return 10;
 		}
 
@@ -423,6 +434,16 @@ namespace {
 			if ( str_contains( $query, '_thumbnail_id' ) ) {
 				return [
 					(object) [ 'ID' => 42, 'post_title' => 'Beispielbeitrag', 'post_type' => 'post' ],
+				];
+			}
+			if ( str_contains( $query, 'nextend2_smartslider3_slides' ) ) {
+				return [
+					(object) [
+						'id'           => 101,
+						'slider'       => 5,
+						'title'        => 'Hero Slide',
+						'slider_title' => 'Startseiten Slider',
+					],
 				];
 			}
 			if ( str_contains( $query, '_ha_io_data' ) ) {
@@ -747,12 +768,23 @@ namespace HA_Image_Optimizer_Tests {
 			$queue = MediaAuditor::get_audit_queue();
 			$this->assert( is_array( $queue ) && count( $queue ) === 3, 'MediaAuditor retrieved media queue' );
 
-			// Mock attachment 1: featured image found in post 42
+			// Mock attachment 1: featured image found in post 42 and Smart Slider 3 slide
 			$auditUsed = MediaAuditor::audit_attachment( 1 );
 			$this->assert( MediaAuditor::STATUS_USED === $auditUsed['status'], 'Detected used attachment with featured image reference' );
 			$this->assert( ! empty( $auditUsed['references'] ), 'Contains detailed reference labels' );
 			$this->assert( ! empty( $auditUsed['references'][0]['url'] ), 'Reference includes direct edit link' );
 			$this->assert( str_contains( $auditUsed['references'][0]['label'], 'Beitragsbild' ), 'Reference label identifies featured image' );
+
+			$hasSmartSlider = false;
+			foreach ( $auditUsed['references'] as $ref ) {
+				if ( str_contains( $ref['label'], 'Smart Slider 3' ) ) {
+					$hasSmartSlider = true;
+					$this->assert( str_contains( $ref['url'], 'page=smartslider3' ), 'Smart Slider reference contains direct slide link' );
+					$this->assert( str_contains( $ref['label'], 'Hero Slide' ), 'Smart Slider reference identifies slide title' );
+					break;
+				}
+			}
+			$this->assert( $hasSmartSlider, 'Detected Smart Slider 3 usage and generated direct editor link' );
 
 			// Test caching and metric calculation
 			$mockItems = [
