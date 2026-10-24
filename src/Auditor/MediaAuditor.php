@@ -46,6 +46,13 @@ class MediaAuditor {
 	private static ?array $custom_tables_cache = null;
 
 	/**
+	 * In-memory & transient cached schema of custom third-party database tables.
+	 *
+	 * @var array<string, array{columns: array<string>, label: string, url_template: string, id_col: string, title_col: string}>|null
+	 */
+	private static ?array $generic_custom_tables_cache = null;
+
+	/**
 	 * Get list of all eligible media attachment IDs to audit.
 	 *
 	 * @return array<int>
@@ -425,7 +432,62 @@ class MediaAuditor {
 		}
 
 		// -------------------------------------------------------------
-		// 8. Active Theme Files Scan (style.css, templates, theme.json)
+		// 8. Generic Postmeta Deep Scan (Custom Fields, Meta Boxes, Theme Fields)
+		// -------------------------------------------------------------
+		$pm_clauses = [
+			'pm.meta_value LIKE %s',
+			'pm.meta_value LIKE %s',
+			'pm.meta_value LIKE %s',
+		];
+		$pm_params  = [
+			'%i:' . $attachment_id . ';%',
+			'%"id":' . $attachment_id . '%',
+			'%"imageId":' . $attachment_id . '%',
+		];
+
+		if ( ! empty( $rel_file ) ) {
+			$pm_clauses[] = 'pm.meta_value LIKE %s';
+			$pm_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
+		}
+		if ( strlen( $filename ) >= 6 ) {
+			$pm_clauses[] = 'pm.meta_value LIKE %s';
+			$pm_params[]  = '%' . $wpdb->esc_like( $filename ) . '%';
+		}
+
+		$where_pm = implode( ' OR ', $pm_clauses );
+		$other_postmeta = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT p.ID, p.post_title, p.post_type, pm.meta_key
+				FROM {$wpdb->postmeta} pm
+				INNER JOIN {$wpdb->posts} p ON (pm.post_id = p.ID)
+				WHERE pm.meta_key NOT IN ('_thumbnail_id', '_product_image_gallery', '_elementor_data', '_elementor_page_settings', '_elementor_css', '_ha_io_data')
+				AND pm.meta_key NOT LIKE '_acf_%'
+				AND p.post_status != 'trash'
+				AND ({$where_pm})
+				LIMIT 3",
+				...$pm_params
+			)
+		);
+
+		if ( ! empty( $other_postmeta ) ) {
+			foreach ( $other_postmeta as $opm ) {
+				$title   = ! empty( $opm->post_title ) ? $opm->post_title : ( 'ID ' . ( $opm->ID ?? 0 ) );
+				$post_id = (int) ( $opm->ID ?? 0 );
+				$references[] = [
+					'label' => sprintf(
+						/* translators: 1: meta key, 2: post title, 3: post ID */
+						__( 'Beitragsfeld ("%1$s") in "%2$s" (#%3$d)', 'ha-image-optimizer' ),
+						$opm->meta_key,
+						$title,
+						$post_id
+					),
+					'url'   => self::safe_admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
+				];
+			}
+		}
+
+		// -------------------------------------------------------------
+		// 9. Active Theme Files Scan (style.css, templates, theme.json)
 		// -------------------------------------------------------------
 		$theme_file = self::search_active_theme_files( $filename, $rel_file );
 		if ( $theme_file ) {
@@ -440,7 +502,7 @@ class MediaAuditor {
 		}
 
 		// -------------------------------------------------------------
-		// 9. Slider Plugins (Smart Slider 3, Slider Revolution, LayerSlider)
+		// 10. Slider Plugins (Smart Slider 3, Slider Revolution, LayerSlider)
 		// -------------------------------------------------------------
 		// Smart Slider 3 (Nextend)
 		$table_smart_slides = self::get_custom_table( '%smartslider%slides' );
@@ -673,19 +735,164 @@ class MediaAuditor {
 		}
 
 		// -------------------------------------------------------------
-		// 10. WordPress Widgets & Options (wp_options)
+		// 11. Generic Third-Party Database Tables Scanner
+		// -------------------------------------------------------------
+		if ( Settings::get( 'auditor_generic_db_scan', true ) ) {
+			$custom_tables = self::get_generic_custom_tables();
+			$skip_tables   = [
+				$wpdb->prefix . 'nextend2_smartslider3_slides',
+				$wpdb->prefix . 'nextend_smartslider3_slides',
+				$wpdb->prefix . 'nextend2_smartslider3_sliders',
+				$wpdb->prefix . 'nextend_smartslider3_sliders',
+				$wpdb->prefix . 'revslider_slides',
+				$wpdb->prefix . 'revslider_sliders',
+				$wpdb->prefix . 'layerslider',
+			];
+
+			foreach ( $custom_tables as $table_name => $tbl_info ) {
+				if ( in_array( $table_name, $skip_tables, true ) ) {
+					continue;
+				}
+
+				$cols = $tbl_info['columns'] ?? [];
+				if ( empty( $cols ) ) {
+					continue;
+				}
+
+				$tbl_clauses = [];
+				$tbl_params  = [];
+
+				foreach ( $cols as $col ) {
+					$tbl_clauses[] = "`{$col}` LIKE %s";
+					$tbl_params[]  = '%i:' . $attachment_id . ';%';
+
+					$tbl_clauses[] = "`{$col}` LIKE %s";
+					$tbl_params[]  = '%"id":' . $attachment_id . '%';
+
+					$tbl_clauses[] = "`{$col}` LIKE %s";
+					$tbl_params[]  = '%"id":"' . $attachment_id . '"%';
+
+					$tbl_clauses[] = "`{$col}` LIKE %s";
+					$tbl_params[]  = '%"imageId":' . $attachment_id . '%';
+
+					$tbl_clauses[] = "`{$col}` LIKE %s";
+					$tbl_params[]  = '%"image_id":' . $attachment_id . '%';
+
+					if ( ! empty( $rel_file ) ) {
+						$tbl_clauses[] = "`{$col}` LIKE %s";
+						$tbl_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
+					}
+
+					if ( strlen( $filename ) >= 6 ) {
+						$tbl_clauses[] = "`{$col}` LIKE %s";
+						$tbl_params[]  = '%' . $wpdb->esc_like( $filename ) . '%';
+					}
+				}
+
+				if ( empty( $tbl_clauses ) ) {
+					continue;
+				}
+
+				$where_tbl = implode( ' OR ', $tbl_clauses );
+				$tbl_sql   = $wpdb->prepare(
+					"SELECT * FROM `{$table_name}` WHERE ({$where_tbl}) LIMIT 3",
+					...$tbl_params
+				);
+				$tbl_rows  = $wpdb->get_results( $tbl_sql );
+
+				if ( ! empty( $tbl_rows ) ) {
+					$id_col    = $tbl_info['id_col'] ?? '';
+					$title_col = $tbl_info['title_col'] ?? '';
+					$url_tpl   = $tbl_info['url_template'] ?? '';
+					$base_lbl  = $tbl_info['label'] ?? ( 'Tabelle "' . str_replace( $wpdb->prefix, '', $table_name ) . '"' );
+
+					foreach ( $tbl_rows as $trow ) {
+						$row_id    = '';
+						$row_title = '';
+
+						if ( ! empty( $id_col ) && isset( $trow->$id_col ) ) {
+							$row_id = (string) $trow->$id_col;
+						} elseif ( isset( $trow->id ) ) {
+							$row_id = (string) $trow->id;
+						} elseif ( isset( $trow->ID ) ) {
+							$row_id = (string) $trow->ID;
+						}
+
+						if ( ! empty( $title_col ) && isset( $trow->$title_col ) ) {
+							$row_title = (string) $trow->$title_col;
+						} elseif ( isset( $trow->title ) ) {
+							$row_title = (string) $trow->title;
+						} elseif ( isset( $trow->name ) ) {
+							$row_title = (string) $trow->name;
+						}
+
+						if ( ! empty( $row_title ) && ! empty( $row_id ) ) {
+							$label = sprintf(
+								/* translators: 1: table label, 2: row title, 3: row ID */
+								__( '%1$s: "%2$s" (#%3$s)', 'ha-image-optimizer' ),
+								$base_lbl,
+								$row_title,
+								$row_id
+							);
+						} elseif ( ! empty( $row_title ) ) {
+							$label = sprintf(
+								/* translators: 1: table label, 2: row title */
+								__( '%1$s: "%2$s"', 'ha-image-optimizer' ),
+								$base_lbl,
+								$row_title
+							);
+						} elseif ( ! empty( $row_id ) ) {
+							$label = sprintf(
+								/* translators: 1: table label, 2: row ID */
+								__( '%1$s: Eintrag #%2$s', 'ha-image-optimizer' ),
+								$base_lbl,
+								$row_id
+							);
+						} else {
+							$label = sprintf(
+								/* translators: 1: table label */
+								__( 'Verwendet in %1$s', 'ha-image-optimizer' ),
+								$base_lbl
+							);
+						}
+
+						$url = '';
+						if ( ! empty( $url_tpl ) && ! empty( $row_id ) ) {
+							$url = self::safe_admin_url( str_replace( '%id%', $row_id, $url_tpl ) );
+						}
+
+						$references[] = [
+							'label' => $label,
+							'url'   => $url,
+						];
+					}
+				}
+			}
+		}
+
+		// -------------------------------------------------------------
+		// 12. WordPress Widgets & Options (wp_options)
 		// -------------------------------------------------------------
 		if ( ! empty( $wpdb->options ) ) {
 			$opt_clauses = [
 				'option_value LIKE %s',
+				'option_value LIKE %s',
+				'option_value LIKE %s',
 			];
 			$opt_params  = [
 				'%i:' . $attachment_id . ';%',
+				'%"id":' . $attachment_id . '%',
+				'%"imageId":' . $attachment_id . '%',
 			];
 
 			if ( ! empty( $rel_file ) ) {
 				$opt_clauses[] = 'option_value LIKE %s';
 				$opt_params[]  = '%' . $wpdb->esc_like( $rel_file ) . '%';
+			}
+
+			if ( strlen( $filename ) >= 6 ) {
+				$opt_clauses[] = 'option_value LIKE %s';
+				$opt_params[]  = '%' . $wpdb->esc_like( $filename ) . '%';
 			}
 
 			$where_opts = implode( ' OR ', $opt_clauses );
@@ -718,7 +925,52 @@ class MediaAuditor {
 		}
 
 		// -------------------------------------------------------------
-		// 11. Status Classification & Deduplication
+		// 13. Safety Buffer: Protect recently uploaded media from accidental deletion
+		// -------------------------------------------------------------
+		$safety_days = (int) Settings::get( 'auditor_safety_buffer_days', 14 );
+		if ( function_exists( 'apply_filters' ) ) {
+			$safety_days = (int) apply_filters( 'ha_io_audit_safety_period_days', $safety_days, $attachment_id );
+		}
+
+		if ( empty( $references ) && $safety_days > 0 ) {
+			$post_date = ! empty( $post->post_date_gmt ) && '0000-00-00 00:00:00' !== $post->post_date_gmt
+				? $post->post_date_gmt
+				: $post->post_date;
+
+			$created_time = strtotime( (string) $post_date );
+			if ( $created_time ) {
+				$day_in_sec = defined( 'DAY_IN_SECONDS' ) ? DAY_IN_SECONDS : 86400;
+				$age_days   = (int) floor( ( time() - $created_time ) / $day_in_sec );
+				if ( $age_days <= $safety_days ) {
+					$references[] = [
+						'label' => sprintf(
+							/* translators: 1: age in days, 2: configured safety period */
+							__( '🛡️ Schutzfrist aktiv: Vor %1$d Tagen hochgeladen (Schutz vor versehentlichem Löschen, Frist: %2$d Tage)', 'ha-image-optimizer' ),
+							max( 0, $age_days ),
+							$safety_days
+						),
+						'url'   => self::safe_admin_url( 'post.php?post=' . $attachment_id . '&action=edit' ),
+					];
+				}
+			}
+		}
+
+		// -------------------------------------------------------------
+		// 14. Extensibility Hook for Developers & Plugins
+		// -------------------------------------------------------------
+		if ( function_exists( 'apply_filters' ) ) {
+			/**
+			 * Filter detected references for an audited attachment.
+			 *
+			 * @param array<array{label: string, url: string}> $references Detected references.
+			 * @param int                                      $attachment_id Attachment ID.
+			 * @param \WP_Post                                 $post Attachment post object.
+			 */
+			$references = (array) apply_filters( 'ha_io_audit_attachment_references', $references, $attachment_id, $post );
+		}
+
+		// -------------------------------------------------------------
+		// 15. Status Classification & Deduplication
 		// -------------------------------------------------------------
 		$deduped = [];
 		$seen    = [];
@@ -846,6 +1098,156 @@ class MediaAuditor {
 
 		self::$custom_tables_cache[ $pattern ] = $found ? (string) $found : '';
 		return $found ? (string) $found : null;
+	}
+
+	/**
+	 * Discover and cache eligible third-party tables and their text columns.
+	 *
+	 * @return array<string, array{columns: array<string>, label: string, url_template: string, id_col: string, title_col: string}>
+	 */
+	public static function get_generic_custom_tables(): array {
+		global $wpdb;
+
+		if ( null !== self::$generic_custom_tables_cache ) {
+			return self::$generic_custom_tables_cache;
+		}
+
+		$cached = function_exists( 'get_transient' ) ? get_transient( 'ha_io_audit_tables_schema' ) : false;
+		if ( is_array( $cached ) ) {
+			self::$generic_custom_tables_cache = $cached;
+			return self::$generic_custom_tables_cache;
+		}
+
+		$prefix     = ! empty( $wpdb->prefix ) ? $wpdb->prefix : 'wp_';
+		$all_tables = (array) $wpdb->get_col( $wpdb->prepare( "SHOW TABLES LIKE %s", $wpdb->esc_like( $prefix ) . '%' ) );
+
+		$core_tables = [
+			$prefix . 'posts',
+			$prefix . 'postmeta',
+			$prefix . 'comments',
+			$prefix . 'commentmeta',
+			$prefix . 'terms',
+			$prefix . 'termmeta',
+			$prefix . 'term_taxonomy',
+			$prefix . 'term_relationships',
+			$prefix . 'users',
+			$prefix . 'usermeta',
+			$prefix . 'options',
+			$prefix . 'links',
+		];
+
+		$default_ignored = [
+			'%action_scheduler%',
+			'%actionscheduler%',
+			'%log%',
+			'%cache%',
+			'%session%',
+			'%analytics%',
+			'%stats%',
+			'%redirection%',
+			'%yoast_indexable%',
+			'%rank_math_analytics%',
+			'%wf%',
+			'%failed_jobs%',
+			'%matomo%',
+			'%transient%',
+			'%ha_io_%',
+		];
+
+		$ignored_patterns = function_exists( 'apply_filters' )
+			? (array) apply_filters( 'ha_io_audit_ignored_tables', $default_ignored )
+			: $default_ignored;
+
+		$user_tables_raw = (string) Settings::get( 'auditor_custom_tables', '' );
+		$user_tables     = array_filter( array_map( 'trim', explode( "\n", str_replace( "\r", '', $user_tables_raw ) ) ) );
+
+		$discovered = [];
+
+		foreach ( $all_tables as $table ) {
+			$table = (string) $table;
+
+			if ( in_array( $table, $core_tables, true ) ) {
+				continue;
+			}
+
+			$is_user_explicit = in_array( $table, $user_tables, true ) || in_array( str_replace( $prefix, '', $table ), $user_tables, true );
+
+			if ( ! $is_user_explicit ) {
+				$skip = false;
+				foreach ( $ignored_patterns as $pattern ) {
+					$clean_pat = trim( $pattern, '%' );
+					if ( ! empty( $clean_pat ) && str_contains( strtolower( $table ), strtolower( $clean_pat ) ) ) {
+						$skip = true;
+						break;
+					}
+				}
+				if ( $skip ) {
+					continue;
+				}
+			}
+
+			$cols_data = $wpdb->get_results( "SHOW COLUMNS FROM `{$table}`" );
+			if ( empty( $cols_data ) ) {
+				continue;
+			}
+
+			$text_columns = [];
+			$id_col       = '';
+			$title_col    = '';
+
+			foreach ( $cols_data as $cd ) {
+				$field = (string) ( $cd->Field ?? '' );
+				$type  = strtolower( (string) ( $cd->Type ?? '' ) );
+
+				if ( empty( $id_col ) && in_array( strtolower( $field ), [ 'id', 'id_entry', 'entry_id', 'item_id', 'slide_id', 'form_id' ], true ) ) {
+					$id_col = $field;
+				}
+				if ( empty( $title_col ) && in_array( strtolower( $field ), [ 'title', 'name', 'post_title', 'label' ], true ) ) {
+					$title_col = $field;
+				}
+
+				if (
+					str_contains( $type, 'varchar' ) ||
+					str_contains( $type, 'text' ) ||
+					str_contains( $type, 'json' ) ||
+					str_contains( $type, 'blob' )
+				) {
+					$text_columns[] = $field;
+				}
+			}
+
+			if ( empty( $text_columns ) ) {
+				continue;
+			}
+
+			$clean_name = str_replace( $prefix, '', $table );
+			$label      = sprintf( __( 'Tabelle "%s"', 'ha-image-optimizer' ), $clean_name );
+
+			$discovered[ $table ] = [
+				'columns'      => $text_columns,
+				'id_col'       => $id_col,
+				'title_col'    => $title_col,
+				'label'        => $label,
+				'url_template' => '',
+			];
+		}
+
+		if ( function_exists( 'apply_filters' ) ) {
+			/**
+			 * Filter custom tables schema for media audit.
+			 *
+			 * @param array<string, array{columns: array<string>, label: string, url_template: string, id_col: string, title_col: string}> $discovered
+			 */
+			$discovered = (array) apply_filters( 'ha_io_audit_custom_tables', $discovered );
+		}
+
+		$hour = defined( 'HOUR_IN_SECONDS' ) ? HOUR_IN_SECONDS : 3600;
+		if ( function_exists( 'set_transient' ) ) {
+			set_transient( 'ha_io_audit_tables_schema', $discovered, $hour );
+		}
+
+		self::$generic_custom_tables_cache = $discovered;
+		return self::$generic_custom_tables_cache;
 	}
 
 	/**
@@ -1063,8 +1465,12 @@ class MediaAuditor {
 	 * @return bool
 	 */
 	public static function clear_results(): bool {
-		self::$theme_files_cache   = null;
-		self::$custom_tables_cache = null;
+		self::$theme_files_cache          = null;
+		self::$custom_tables_cache        = null;
+		self::$generic_custom_tables_cache = null;
+		if ( function_exists( 'delete_transient' ) ) {
+			delete_transient( 'ha_io_audit_tables_schema' );
+		}
 		return delete_option( self::OPTION_RESULTS );
 	}
 }

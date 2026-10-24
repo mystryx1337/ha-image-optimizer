@@ -221,6 +221,46 @@ namespace {
 		}
 	}
 
+	if ( ! function_exists( 'apply_filters' ) ) {
+		function apply_filters( $hook, $value, ...$args ) {
+			if ( ! empty( $GLOBALS['wp_test_filters'][ $hook ] ) ) {
+				foreach ( $GLOBALS['wp_test_filters'][ $hook ] as $callback ) {
+					$value = call_user_func( $callback, $value, ...$args );
+				}
+			}
+			return $value;
+		}
+	}
+
+	$GLOBALS['wp_test_transients'] = [];
+	if ( ! function_exists( 'get_transient' ) ) {
+		function get_transient( $transient ) {
+			return $GLOBALS['wp_test_transients'][ $transient ] ?? false;
+		}
+	}
+	if ( ! function_exists( 'set_transient' ) ) {
+		function set_transient( $transient, $value, $expiration = 0 ): bool {
+			$GLOBALS['wp_test_transients'][ $transient ] = $value;
+			return true;
+		}
+	}
+	if ( ! function_exists( 'delete_transient' ) ) {
+		function delete_transient( $transient ): bool {
+			unset( $GLOBALS['wp_test_transients'][ $transient ] );
+			return true;
+		}
+	}
+
+	if ( ! defined( 'MINUTE_IN_SECONDS' ) ) {
+		define( 'MINUTE_IN_SECONDS', 60 );
+	}
+	if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
+		define( 'HOUR_IN_SECONDS', 3600 );
+	}
+	if ( ! defined( 'DAY_IN_SECONDS' ) ) {
+		define( 'DAY_IN_SECONDS', 86400 );
+	}
+
 	if ( ! function_exists( 'wp_upload_dir' ) ) {
 		function wp_upload_dir(): array {
 			$base = wp_normalize_path( WP_CONTENT_DIR . '/uploads' );
@@ -349,6 +389,8 @@ namespace {
 				'post_parent'    => 0,
 				'post_status'    => 'inherit',
 				'post_title'     => 'Mock Attachment ' . $id,
+				'post_date'      => '2020-01-01 12:00:00',
+				'post_date_gmt'  => '2020-01-01 12:00:00',
 			];
 		}
 	}
@@ -431,6 +473,28 @@ namespace {
 		}
 
 		public function get_results( $query ) {
+			if ( str_contains( $query, 'SHOW COLUMNS FROM `wp_wpforms_entries`' ) ) {
+				return [
+					(object) [ 'Field' => 'entry_id', 'Type' => 'int(11)' ],
+					(object) [ 'Field' => 'fields',   'Type' => 'longtext' ],
+				];
+			}
+			if ( str_contains( $query, 'FROM `wp_wpforms_entries`' ) ) {
+				if ( str_contains( $query, '20' ) ) {
+					return [
+						(object) [ 'entry_id' => 88, 'fields' => '{"imageId":20}' ],
+					];
+				}
+				return [];
+			}
+			if ( str_contains( $query, 'meta_key NOT IN' ) && str_contains( $query, "meta_key NOT LIKE '_acf_%'" ) ) {
+				if ( str_contains( $query, '25' ) ) {
+					return [
+						(object) [ 'ID' => 55, 'post_title' => 'Landingpage', 'post_type' => 'page', 'meta_key' => 'custom_hero_image' ],
+					];
+				}
+				return [];
+			}
 			if ( str_contains( $query, '_thumbnail_id' ) ) {
 				return [
 					(object) [ 'ID' => 42, 'post_title' => 'Beispielbeitrag', 'post_type' => 'post' ],
@@ -460,6 +524,16 @@ namespace {
 		}
 
 		public function get_col( $query ) {
+			if ( is_string( $query ) && str_contains( $query, "SHOW TABLES LIKE 'wp_%'" ) ) {
+				return [
+					'wp_posts',
+					'wp_postmeta',
+					'wp_options',
+					'wp_nextend2_smartslider3_slides',
+					'wp_nextend2_smartslider3_sliders',
+					'wp_wpforms_entries',
+				];
+			}
 			return [ 1, 2, 3 ];
 		}
 
@@ -624,6 +698,8 @@ namespace HA_Image_Optimizer_Tests {
 			$this->assert( 'smart' === $defaults['compression_sizes'], 'Default sub-size compression is smart' );
 			$this->assert( true === $defaults['backup_originals'], 'Default backup_originals is true' );
 			$this->assert( 'themes' === $defaults['custom_folders'], 'Default custom_folders is themes' );
+			$this->assert( true === $defaults['auditor_generic_db_scan'], 'Default auditor_generic_db_scan is true' );
+			$this->assert( 14 === $defaults['auditor_safety_buffer_days'], 'Default auditor_safety_buffer_days is 14' );
 
 			// Test Sanitization and Path Traversal Prevention
 			$dirty = [
@@ -802,6 +878,74 @@ namespace HA_Image_Optimizer_Tests {
 				}
 			}
 			$this->assert( $hasSmartSlider, 'Detected Smart Slider 3 usage and generated direct editor link' );
+
+			// Test Universal Database Scanner (attachment 20 found in custom table wp_wpforms_entries)
+			$auditGeneric = MediaAuditor::audit_attachment( 20 );
+			$this->assert( MediaAuditor::STATUS_USED === $auditGeneric['status'], 'Detected used attachment in generic third-party table' );
+			$hasGenericTable = false;
+			foreach ( $auditGeneric['references'] as $ref ) {
+				if ( str_contains( $ref['label'], 'wpforms_entries' ) ) {
+					$hasGenericTable = true;
+					$this->assert( str_contains( $ref['label'], '88' ), 'Generic table reference identifies entry ID' );
+					break;
+				}
+			}
+			$this->assert( $hasGenericTable, 'Universal database scanner detected usage in third-party table wp_wpforms_entries' );
+
+			// Test Generic Postmeta Deep Scan (attachment 25 found in unknown postmeta key)
+			$auditMeta = MediaAuditor::audit_attachment( 25 );
+			$this->assert( MediaAuditor::STATUS_USED === $auditMeta['status'], 'Detected used attachment via generic postmeta deep scan' );
+			$hasGenericMeta = false;
+			foreach ( $auditMeta['references'] as $ref ) {
+				if ( str_contains( $ref['label'], 'custom_hero_image' ) ) {
+					$hasGenericMeta = true;
+					$this->assert( str_contains( $ref['label'], 'Landingpage' ), 'Postmeta reference identifies post title' );
+					$this->assert( str_contains( $ref['url'], 'post=55' ), 'Postmeta reference includes direct post edit link' );
+					break;
+				}
+			}
+			$this->assert( $hasGenericMeta, 'Generic postmeta scanner identified unknown custom postmeta reference' );
+
+			// Test Safety Buffer: recently uploaded image (2 days old) protected from deletion
+			$GLOBALS['wp_test_posts'][99] = (object) [
+				'ID'             => 99,
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'image/jpeg',
+				'post_parent'    => 0,
+				'post_status'    => 'inherit',
+				'post_title'     => 'Fresh Upload 99',
+				'post_date'      => date( 'Y-m-d H:i:s', time() - 86400 * 2 ),
+				'post_date_gmt'  => date( 'Y-m-d H:i:s', time() - 86400 * 2 ),
+			];
+			$auditRecent = MediaAuditor::audit_attachment( 99 );
+			$this->assert( MediaAuditor::STATUS_USED === $auditRecent['status'], 'Safety buffer marks recently uploaded media as protected (used)' );
+			$this->assert( ! empty( $auditRecent['references'] ), 'Recent upload has safety buffer reference' );
+			$this->assert( str_contains( $auditRecent['references'][0]['label'], 'Schutzfrist aktiv' ), 'Safety buffer reference explains age and protection' );
+
+			// Test Extensibility Hook: ha_io_audit_attachment_references
+			add_filter( 'ha_io_audit_attachment_references', function( $refs, $id ) {
+				if ( 999 === $id ) {
+					$refs[] = [
+						'label' => 'Plugin Extension Hook Ref',
+						'url'   => 'https://example.com/custom-hook',
+					];
+				}
+				return $refs;
+			}, 10, 2 );
+
+			$GLOBALS['wp_test_posts'][999] = (object) [
+				'ID'             => 999,
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'image/jpeg',
+				'post_parent'    => 0,
+				'post_status'    => 'inherit',
+				'post_title'     => 'Hook Attachment 999',
+				'post_date'      => '2020-01-01 12:00:00',
+				'post_date_gmt'  => '2020-01-01 12:00:00',
+			];
+			$auditHook = MediaAuditor::audit_attachment( 999 );
+			$this->assert( MediaAuditor::STATUS_USED === $auditHook['status'], 'Extensibility filter successfully protects media' );
+			$this->assert( str_contains( $auditHook['references'][0]['label'], 'Plugin Extension Hook Ref' ), 'Hook reference label matched' );
 
 			// Test caching and metric calculation
 			$mockItems = [

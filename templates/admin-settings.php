@@ -291,7 +291,56 @@ $delete_data_on_uninstall = (bool) get_option( 'ha_io_delete_data_on_uninstall',
 			</table>
 		</div>
 
-		<!-- 3. HA Standards Data Protection on Uninstall -->
+		<!-- 3. Medien-Auditor: Erweiterter Tiefenscan & Schutzfrist -->
+		<div class="ha-io-card" id="ha-io-auditor-settings">
+			<h2>🔍 <?php esc_html_e( 'Medien-Auditor: Universeller Tiefenscan & Schutzfrist', 'ha-image-optimizer' ); ?></h2>
+			<p class="description">
+				<?php esc_html_e( 'Konfiguriere, wie gründlich der Medien-Auditor deine Datenbank nach Bildreferenzen durchsucht und wie neu hochgeladene Medien geschützt werden.', 'ha-image-optimizer' ); ?>
+			</p>
+
+			<table class="form-table">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Universeller Datenbank-Scan', 'ha-image-optimizer' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="ha_io_settings[auditor_generic_db_scan]" value="1" <?php checked( $settings['auditor_generic_db_scan'] ?? true ); ?>>
+							<strong><?php esc_html_e( 'Alle Drittanbieter-Tabellen automatisch scannen (Slider, Formulare, Page-Builder, Plugins)', 'ha-image-optimizer' ); ?></strong>
+						</label>
+						<p class="description">
+							<?php esc_html_e( 'Durchsucht alle Tabellen mit Text- und JSON-Spalten nach Bild-IDs, relativen Pfaden und Dateinamen. Log-, Cache- und Statistik-Tabellen werden automatisch übersprungen.', 'ha-image-optimizer' ); ?>
+						</p>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Schutzfrist für neue Uploads', 'ha-image-optimizer' ); ?></th>
+					<td>
+						<label>
+							<input type="number" name="ha_io_settings[auditor_safety_buffer_days]" value="<?php echo esc_attr( $settings['auditor_safety_buffer_days'] ?? 14 ); ?>" min="0" max="365" style="width: 80px;">
+							<?php esc_html_e( 'Tage', 'ha-image-optimizer' ); ?>
+						</label>
+						<p class="description">
+							<?php esc_html_e( 'Bilder, die innerhalb dieses Zeitraums hochgeladen wurden, werden automatisch vor dem Löschen geschützt, auch wenn sie noch nicht veröffentlicht wurden (Standard: 14 Tage, 0 zum Deaktivieren).', 'ha-image-optimizer' ); ?>
+						</p>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Zusätzliche Tabellen scannen', 'ha-image-optimizer' ); ?></th>
+					<td>
+						<label for="ha-io-auditor-custom-tables">
+							<?php esc_html_e( 'Explizite Tabellennamen (eine Tabelle pro Zeile, ohne oder mit Tabellen-Präfix):', 'ha-image-optimizer' ); ?>
+						</label>
+						<textarea id="ha-io-auditor-custom-tables" name="ha_io_settings[auditor_custom_tables]" rows="3" class="large-text code"><?php echo esc_textarea( $settings['auditor_custom_tables'] ?? '' ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Optional. Wird nur benötigt, falls du bestimmte Tabellen gezielt erzwingen möchtest. Standardmäßig erkennt der Auditor alle relevanten Tabellen automatisch.', 'ha-image-optimizer' ); ?>
+						</p>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<!-- 4. HA Standards Data Protection on Uninstall -->
 		<div class="ha-io-card ha-io-card-uninstall">
 			<h2>🗑️ <?php esc_html_e( 'Deinstallations-Schutzwall (HA-Standard)', 'ha-image-optimizer' ); ?></h2>
 			<p>

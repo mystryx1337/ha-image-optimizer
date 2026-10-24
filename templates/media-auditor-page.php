@@ -36,6 +36,18 @@ $last_scan   = ! empty( $audit_data['last_scan'] ) ? date_i18n( 'd.m.Y H:i', (in
 		<?php esc_html_e( 'Der Medien-Auditor scannt deine gesamte WordPress-Mediathek und prüft, ob Bilder tatsächlich auf deiner Website verwendet werden. Geprüft werden Beitragsbilder, WooCommerce-Produktgalerien, Inhalte aller Seiten/Beiträge (inkl. Gutenberg-Blöcke & <img>-Tags), Page-Builder, Website-Logos, Favicons und Taxonomien.', 'ha-image-optimizer' ); ?>
 	</p>
 
+	<div style="margin: 12px 0 20px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 12px;">
+		<span style="background: #e7f3ff; color: #0969da; padding: 4px 10px; border-radius: 12px; font-weight: 500;">
+			🌐 <?php esc_html_e( 'Universeller DB-Scan: Aktiv', 'ha-image-optimizer' ); ?>
+		</span>
+		<span style="background: #dafbe1; color: #1a7f37; padding: 4px 10px; border-radius: 12px; font-weight: 500;">
+			🛡️ <?php printf( esc_html__( 'Schutzfrist für neue Uploads: %d Tage', 'ha-image-optimizer' ), (int) \ha\ImageOptimizer\Common\Settings::get( 'auditor_safety_buffer_days', 14 ) ); ?>
+		</span>
+		<a href="<?php echo esc_url( admin_url( 'options-general.php?page=ha-image-optimizer#ha-io-auditor-settings' ) ); ?>" style="text-decoration: underline; color: #666;">
+			⚙️ <?php esc_html_e( 'Auditor-Einstellungen anpassen', 'ha-image-optimizer' ); ?>
+		</a>
+	</div>
+
 	<!-- Metric Cards Overview -->
 	<div class="ha-io-stats-overview">
 		<div class="ha-io-stat-box">

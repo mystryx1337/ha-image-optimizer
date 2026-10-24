@@ -44,6 +44,9 @@ class Settings {
 			'keep_exif'                    => false,
 			'optimize_custom_folders'      => true,
 			'custom_folders'               => 'themes',
+			'auditor_generic_db_scan'      => true,
+			'auditor_safety_buffer_days'   => 14,
+			'auditor_custom_tables'        => '',
 		];
 	}
 
@@ -152,6 +155,23 @@ class Settings {
 		}
 
 		$clean['custom_folders'] = implode( "\n", array_unique( $clean_folders ) );
+
+		// Auditor Settings
+		$clean['auditor_generic_db_scan'] = ! empty( $input['auditor_generic_db_scan'] );
+
+		$safety_days = isset( $input['auditor_safety_buffer_days'] ) ? absint( $input['auditor_safety_buffer_days'] ) : $defaults['auditor_safety_buffer_days'];
+		$clean['auditor_safety_buffer_days'] = ( $safety_days >= 0 && $safety_days <= 365 ) ? $safety_days : 14;
+
+		$raw_tbls    = (string) ( $input['auditor_custom_tables'] ?? '' );
+		$clean_tbls  = [];
+		$tbl_lines   = explode( "\n", str_replace( "\r", '', $raw_tbls ) );
+		foreach ( $tbl_lines as $tline ) {
+			$tbl = sanitize_key( trim( $tline ) );
+			if ( ! empty( $tbl ) ) {
+				$clean_tbls[] = $tbl;
+			}
+		}
+		$clean['auditor_custom_tables'] = implode( "\n", array_unique( $clean_tbls ) );
 
 		return $clean;
 	}
