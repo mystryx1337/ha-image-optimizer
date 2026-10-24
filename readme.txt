@@ -5,7 +5,7 @@ Tags: image optimizer, webp, avif, compression, performance, media library
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -42,6 +42,11 @@ Nein. Das Plugin arbeitet zu 100% lokal auf deinem Webserver über PHP Imagick o
 Gemäß den HA-Standards werden deine Backups und WebP-Dateien standardmäßig geschützt und nicht gelöscht. In den Einstellungen gibt es einen expliziten Schalter für die vollständige Bereinigung bei Deinstallation.
 
 == Changelog ==
+
+= 1.3.1 =
+* Fix: Behebung eines Fehlers im generischen Postmeta-Scan, bei dem Attachments fälschlicherweise ihre eigenen WordPress-Metadaten (_wp_attached_file / _wp_attachment_metadata) als Verwendung gewertet haben.
+* Fix: Ausschluss von Bild-Optimizer- und Backup-Tabellen (Smush, EWWW, Imagify, Updraft, Duplicator) aus dem universellen Datenbank-Scan.
+* Optimierung: Schutzfrist (Sicherheits-Puffer) standardmäßig auf 0 Tage (deaktiviert) gesetzt, damit ungenutzte Medien out-of-the-box unverfälscht aufgespürt werden.
 
 = 1.3.0 =
 * Neu: Universeller Datenbank-Tiefenscan: Erkennt Bildverwendungen in allen Drittanbieter-Tabellen (Slider, Formulare, Page-Builder, Custom Plugins) vollautomatisch anhand universeller Signaturen (IDs, JSON-Strukturen, relative Upload-Pfade, Dateinamen).
