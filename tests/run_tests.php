@@ -464,7 +464,24 @@ namespace {
 		}
 
 		public function prepare( $query, ...$args ) {
-			return $query;
+			if ( empty( $args ) ) {
+				return $query;
+			}
+			if ( isset( $args[0] ) && is_array( $args[0] ) && 1 === count( $args ) ) {
+				$args = $args[0];
+			}
+			$res = $query;
+			foreach ( $args as $arg ) {
+				$val   = is_scalar( $arg ) ? (string) $arg : '';
+				$pos_s = strpos( $res, '%s' );
+				$pos_d = strpos( $res, '%d' );
+				if ( false !== $pos_s && ( false === $pos_d || $pos_s < $pos_d ) ) {
+					$res = substr_replace( $res, "'" . $val . "'", $pos_s, 2 );
+				} elseif ( false !== $pos_d ) {
+					$res = substr_replace( $res, (string) (int) $val, $pos_d, 2 );
+				}
+			}
+			return $res;
 		}
 
 		public function esc_like( $text ) {
