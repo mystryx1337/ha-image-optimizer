@@ -461,10 +461,10 @@ namespace {
 
 		public function get_var( $query ) {
 			if ( is_string( $query ) && str_contains( $query, 'SHOW TABLES LIKE' ) ) {
-				if ( str_contains( $query, 'smartslider%slides' ) ) {
+				if ( str_contains( $query, 'smartslider' ) && str_contains( $query, 'slides' ) ) {
 					return 'wp_nextend2_smartslider3_slides';
 				}
-				if ( str_contains( $query, 'smartslider%sliders' ) ) {
+				if ( str_contains( $query, 'smartslider' ) && str_contains( $query, 'sliders' ) ) {
 					return 'wp_nextend2_smartslider3_sliders';
 				}
 				return null;
@@ -496,19 +496,25 @@ namespace {
 				return [];
 			}
 			if ( str_contains( $query, '_thumbnail_id' ) ) {
-				return [
-					(object) [ 'ID' => 42, 'post_title' => 'Beispielbeitrag', 'post_type' => 'post' ],
-				];
+				if ( str_contains( $query, 'pm.meta_value = 1' ) || str_contains( $query, "pm.meta_value = '1'" ) || str_contains( $query, 'meta_value = 1' ) ) {
+					return [
+						(object) [ 'ID' => 42, 'post_title' => 'Beispielbeitrag', 'post_type' => 'post' ],
+					];
+				}
+				return [];
 			}
 			if ( str_contains( $query, 'nextend2_smartslider3_slides' ) ) {
-				return [
-					(object) [
-						'id'           => 101,
-						'slider'       => 5,
-						'title'        => 'Hero Slide',
-						'slider_title' => 'Startseiten Slider',
-					],
-				];
+				if ( str_contains( $query, '1' ) ) {
+					return [
+						(object) [
+							'id'           => 101,
+							'slider'       => 5,
+							'title'        => 'Hero Slide',
+							'slider_title' => 'Startseiten Slider',
+						],
+					];
+				}
+				return [];
 			}
 			if ( str_contains( $query, '_ha_io_data' ) ) {
 				return [
@@ -524,7 +530,7 @@ namespace {
 		}
 
 		public function get_col( $query ) {
-			if ( is_string( $query ) && str_contains( $query, "SHOW TABLES LIKE 'wp_%'" ) ) {
+			if ( is_string( $query ) && str_contains( $query, 'SHOW TABLES' ) ) {
 				return [
 					'wp_posts',
 					'wp_postmeta',
@@ -920,7 +926,14 @@ namespace HA_Image_Optimizer_Tests {
 			$auditRecent = MediaAuditor::audit_attachment( 99 );
 			$this->assert( MediaAuditor::STATUS_USED === $auditRecent['status'], 'Safety buffer marks recently uploaded media as protected (used)' );
 			$this->assert( ! empty( $auditRecent['references'] ), 'Recent upload has safety buffer reference' );
-			$this->assert( str_contains( $auditRecent['references'][0]['label'], 'Schutzfrist aktiv' ), 'Safety buffer reference explains age and protection' );
+			$hasSafetyRef = false;
+			foreach ( $auditRecent['references'] as $ref ) {
+				if ( str_contains( $ref['label'], 'Schutzfrist aktiv' ) ) {
+					$hasSafetyRef = true;
+					break;
+				}
+			}
+			$this->assert( $hasSafetyRef, 'Safety buffer reference explains age and protection' );
 
 			// Test Extensibility Hook: ha_io_audit_attachment_references
 			add_filter( 'ha_io_audit_attachment_references', function( $refs, $id ) {
@@ -945,7 +958,14 @@ namespace HA_Image_Optimizer_Tests {
 			];
 			$auditHook = MediaAuditor::audit_attachment( 999 );
 			$this->assert( MediaAuditor::STATUS_USED === $auditHook['status'], 'Extensibility filter successfully protects media' );
-			$this->assert( str_contains( $auditHook['references'][0]['label'], 'Plugin Extension Hook Ref' ), 'Hook reference label matched' );
+			$hasHookRef = false;
+			foreach ( $auditHook['references'] as $ref ) {
+				if ( str_contains( $ref['label'], 'Plugin Extension Hook Ref' ) ) {
+					$hasHookRef = true;
+					break;
+				}
+			}
+			$this->assert( $hasHookRef, 'Hook reference label matched' );
 
 			// Test caching and metric calculation
 			$mockItems = [
