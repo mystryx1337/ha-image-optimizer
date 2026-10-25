@@ -9,16 +9,37 @@
  * @var \WP_Post                   $post
  */
 
+use ha\ImageOptimizer\Common\CompressionLevel;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+$custom_level = (string) get_post_meta( $post->ID, '_ha_io_custom_level', true );
+if ( empty( $custom_level ) && ! empty( $data['custom_level'] ) ) {
+	$custom_level = (string) $data['custom_level'];
+}
+$custom_enum = CompressionLevel::fromString( $custom_level );
+
 if ( empty( $data ) || ! is_array( $data ) ) : ?>
-	<div class="ha-io-meta-card ha-io-meta-unoptimized">
-		<p><?php esc_html_e( 'Dieses Bild wurde noch nicht optimiert.', 'ha-image-optimizer' ); ?></p>
-		<button type="button" class="button button-primary ha-io-btn-optimize" data-id="<?php echo esc_attr( $post->ID ); ?>">
-			<?php esc_html_e( 'Jetzt optimieren', 'ha-image-optimizer' ); ?>
-		</button>
+	<div class="ha-io-meta-card ha-io-meta-unoptimized" data-id="<?php echo esc_attr( $post->ID ); ?>">
+		<p style="margin-top: 0;"><?php esc_html_e( 'Dieses Bild wurde noch nicht optimiert.', 'ha-image-optimizer' ); ?></p>
+		<div class="ha-io-meta-level-choice" style="margin-bottom: 12px;">
+			<label for="ha-io-meta-level-<?php echo esc_attr( $post->ID ); ?>" style="display:block; font-weight: 600; margin-bottom: 6px;">
+				<?php esc_html_e( 'Komprimierung für dieses Bild:', 'ha-image-optimizer' ); ?>
+			</label>
+			<div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+				<select id="ha-io-meta-level-<?php echo esc_attr( $post->ID ); ?>" class="ha-io-level-select" data-id="<?php echo esc_attr( $post->ID ); ?>" style="max-width: 280px; height: 32px; font-size: 13px;">
+					<option value="default"><?php esc_html_e( 'Standard (Globale Einstellung)', 'ha-image-optimizer' ); ?></option>
+					<option value="ultra"><?php esc_html_e( 'Hoch (Maximal - ca. 72% Qualität)', 'ha-image-optimizer' ); ?></option>
+					<option value="smart"><?php esc_html_e( 'Mittel (Ausgewogen - ca. 82% Qualität)', 'ha-image-optimizer' ); ?></option>
+					<option value="lossless"><?php esc_html_e( 'Niedrig (Verlustfrei - 100% Schärfe)', 'ha-image-optimizer' ); ?></option>
+				</select>
+				<button type="button" class="button button-primary ha-io-btn-optimize" data-id="<?php echo esc_attr( $post->ID ); ?>">
+					⚡ <?php esc_html_e( 'Jetzt optimieren', 'ha-image-optimizer' ); ?>
+				</button>
+			</div>
+		</div>
 	</div>
 	<?php
 	return;
@@ -38,6 +59,15 @@ $engine        = $data['engine'] ?? 'Lokal';
 		<div class="ha-io-meta-title">
 			<strong>⚡ HA Image Optimizer</strong>
 			<span class="ha-io-badge ha-io-badge-engine"><?php echo esc_html( $engine ); ?></span>
+			<?php if ( $custom_enum ) : ?>
+				<span class="ha-io-badge ha-io-badge-orange" title="<?php echo esc_attr( $custom_enum->selection_label() ); ?>">
+					<?php echo esc_html( $custom_enum->badge_label() ); ?>
+				</span>
+			<?php else : ?>
+				<span class="ha-io-badge ha-io-badge-gray" title="<?php esc_attr_e( 'Verwendet globale Standardeinstellungen', 'ha-image-optimizer' ); ?>">
+					<?php esc_html_e( 'Standard-Stufe', 'ha-image-optimizer' ); ?>
+				</span>
+			<?php endif; ?>
 		</div>
 		<div class="ha-io-meta-summary-badge">
 			-<?php echo esc_html( number_format_i18n( $saved_percent, 1 ) ); ?>%
@@ -98,11 +128,37 @@ $engine        = $data['engine'] ?? 'Lokal';
 		</tbody>
 	</table>
 
-	<div class="ha-io-meta-actions">
-		<button type="button" class="button ha-io-btn-optimize" data-id="<?php echo esc_attr( $post->ID ); ?>">
-			🔄 <?php esc_html_e( 'Erneut optimieren', 'ha-image-optimizer' ); ?>
-		</button>
+	<div class="ha-io-meta-level-choice" style="margin: 14px 0; padding: 12px; background: #fff; border: 1px solid #dcdcde; border-radius: 6px;">
+		<label for="ha-io-meta-level-<?php echo esc_attr( $post->ID ); ?>" style="display:block; font-weight: 600; margin-bottom: 6px;">
+			<?php esc_html_e( 'Individuelle Komprimierungsstufe ändern:', 'ha-image-optimizer' ); ?>
+		</label>
+		<div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+			<select id="ha-io-meta-level-<?php echo esc_attr( $post->ID ); ?>" class="ha-io-level-select" data-id="<?php echo esc_attr( $post->ID ); ?>" style="max-width: 280px; height: 32px; font-size: 13px;">
+				<option value="default" <?php selected( empty( $custom_level ) ); ?>><?php esc_html_e( 'Standard (Globale Einstellung)', 'ha-image-optimizer' ); ?></option>
+				<option value="ultra" <?php selected( $custom_level, 'ultra' ); ?>><?php esc_html_e( 'Hoch (Maximal - ca. 72% Qualität)', 'ha-image-optimizer' ); ?></option>
+				<option value="smart" <?php selected( $custom_level, 'smart' ); ?>><?php esc_html_e( 'Mittel (Ausgewogen - ca. 82% Qualität)', 'ha-image-optimizer' ); ?></option>
+				<option value="lossless" <?php selected( $custom_level, 'lossless' ); ?>><?php esc_html_e( 'Niedrig (Verlustfrei - 100% Schärfe)', 'ha-image-optimizer' ); ?></option>
+			</select>
+			<button type="button" class="button button-primary ha-io-btn-optimize" data-id="<?php echo esc_attr( $post->ID ); ?>">
+				🔄 <?php esc_html_e( 'Erneut optimieren', 'ha-image-optimizer' ); ?>
+			</button>
+		</div>
+		<p class="description" style="margin-top: 6px; margin-bottom: 0;">
+			<?php
+			if ( $custom_enum ) {
+				printf(
+					/* translators: %s: Level label */
+					esc_html__( 'Aktuell aktiv: %s. Beim erneuten Optimieren wird das Bild aus dem Original-Backup verlustfrei mit dieser Stufe neu berechnet.', 'ha-image-optimizer' ),
+					'<strong>' . esc_html( $custom_enum->selection_label() ) . '</strong>'
+				);
+			} else {
+				esc_html_e( 'Aktuell gilt die globale Standard-Einstellung. Wähle eine individuelle Stufe (Hoch, Mittel oder Niedrig), um dieses Bild gezielt abweichend zu komprimieren.', 'ha-image-optimizer' );
+			}
+			?>
+		</p>
+	</div>
 
+	<div class="ha-io-meta-actions">
 		<?php if ( $has_backup ) : ?>
 			<button type="button" class="button ha-io-btn-restore" data-id="<?php echo esc_attr( $post->ID ); ?>">
 				↩️ <?php esc_html_e( 'Original wiederherstellen', 'ha-image-optimizer' ); ?>

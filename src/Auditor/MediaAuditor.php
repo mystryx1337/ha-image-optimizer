@@ -459,7 +459,8 @@ class MediaAuditor {
 				WHERE pm.post_id != %d
 				AND p.post_type NOT IN ('attachment', 'revision')
 				AND pm.meta_key NOT LIKE '_wp_%'
-				AND pm.meta_key NOT IN ('_thumbnail_id', '_product_image_gallery', '_elementor_data', '_elementor_page_settings', '_elementor_css', '_ha_io_data')
+				AND pm.meta_key NOT LIKE '_ha_io_%'
+				AND pm.meta_key NOT IN ('_thumbnail_id', '_product_image_gallery', '_elementor_data', '_elementor_page_settings', '_elementor_css')
 				AND pm.meta_key NOT LIKE '_acf_%'
 				AND p.post_status != 'trash'
 				AND ({$where_pm})

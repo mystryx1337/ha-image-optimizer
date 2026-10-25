@@ -20,6 +20,28 @@ enum CompressionLevel: string {
 	case ULTRA    = 'ultra';
 
 	/**
+	 * Map a user-facing level string or alias to a CompressionLevel enum.
+	 * Supports 'lossless', 'smart', 'ultra', and aliases 'niedrig', 'mittel', 'hoch', 'low', 'medium', 'high'.
+	 *
+	 * @param string|null $level Raw level string.
+	 * @return self|null Matching enum instance, or null if empty / unknown.
+	 */
+	public static function fromString( ?string $level ): ?self {
+		if ( null === $level || '' === trim( $level ) ) {
+			return null;
+		}
+
+		$normalized = strtolower( trim( $level ) );
+
+		return match ( $normalized ) {
+			'lossless', 'niedrig', 'low' => self::LOSSLESS,
+			'smart', 'mittel', 'medium'  => self::SMART,
+			'ultra', 'hoch', 'high'      => self::ULTRA,
+			default                      => self::tryFrom( $normalized ),
+		};
+	}
+
+	/**
 	 * Get human-readable label.
 	 *
 	 * @return string
@@ -29,6 +51,32 @@ enum CompressionLevel: string {
 			self::LOSSLESS => __( 'Verlustfrei (Lossless - 100% Schärfe)', 'ha-image-optimizer' ),
 			self::SMART    => __( 'Smart (Ausgewogen - ca. 82% Qualität)', 'ha-image-optimizer' ),
 			self::ULTRA    => __( 'Ultra (Aggressiv - ca. 72% Qualität)', 'ha-image-optimizer' ),
+		};
+	}
+
+	/**
+	 * Get detailed label for selection dropdowns.
+	 *
+	 * @return string
+	 */
+	public function selection_label(): string {
+		return match ( $this ) {
+			self::ULTRA    => __( 'Hoch (Maximal - ca. 72% Qualität)', 'ha-image-optimizer' ),
+			self::SMART    => __( 'Mittel (Ausgewogen - ca. 82% Qualität)', 'ha-image-optimizer' ),
+			self::LOSSLESS => __( 'Niedrig (Verlustfrei - 100% Schärfe)', 'ha-image-optimizer' ),
+		};
+	}
+
+	/**
+	 * Get short badge label.
+	 *
+	 * @return string
+	 */
+	public function badge_label(): string {
+		return match ( $this ) {
+			self::ULTRA    => __( 'Hoch (Ultra)', 'ha-image-optimizer' ),
+			self::SMART    => __( 'Mittel (Smart)', 'ha-image-optimizer' ),
+			self::LOSSLESS => __( 'Niedrig (Verlustfrei)', 'ha-image-optimizer' ),
 		};
 	}
 

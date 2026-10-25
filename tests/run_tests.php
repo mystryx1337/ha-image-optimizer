@@ -450,6 +450,44 @@ namespace {
 		}
 	}
 
+	if ( ! function_exists( 'get_post_mime_type' ) ) {
+		function get_post_mime_type( $id = 0 ): string {
+			$p = get_post( $id );
+			return $p ? (string) ( $p->post_mime_type ?? 'image/jpeg' ) : 'image/jpeg';
+		}
+	}
+
+	if ( ! function_exists( 'wp_raise_memory_limit' ) ) {
+		function wp_raise_memory_limit( $context = 'admin' ): void {}
+	}
+
+	if ( ! function_exists( 'current_time' ) ) {
+		function current_time( $type, $gmt = 0 ): string {
+			return date( 'Y-m-d H:i:s' );
+		}
+	}
+
+	if ( ! function_exists( 'selected' ) ) {
+		function selected( $selected, $current = true, $display = true ): string {
+			$result = ( (string) $selected === (string) $current ) ? " selected='selected'" : '';
+			if ( $display ) {
+				echo $result;
+			}
+			return $result;
+		}
+	}
+
+	if ( ! function_exists( 'wp_generate_attachment_metadata' ) ) {
+		function wp_generate_attachment_metadata( $attachment_id, $file ) {
+			return [
+				'width'  => 800,
+				'height' => 600,
+				'file'   => wp_basename( $file ),
+				'sizes'  => [],
+			];
+		}
+	}
+
 	class MockWpdb {
 		public string $prefix        = 'wp_';
 		public string $posts         = 'wp_posts';
@@ -580,6 +618,7 @@ namespace HA_Image_Optimizer_Tests {
 	use ha\ImageOptimizer\Common\Environment;
 	use ha\ImageOptimizer\Engine\SizeGuard;
 	use ha\ImageOptimizer\Media\BackupManager;
+	use ha\ImageOptimizer\Media\AttachmentProcessor;
 	use ha\ImageOptimizer\Media\CustomFolderProcessor;
 	use ha\ImageOptimizer\Delivery\ContentFilter;
 	use ha\ImageOptimizer\Delivery\HtaccessManager;
@@ -612,6 +651,7 @@ namespace HA_Image_Optimizer_Tests {
 			$this->testHtaccessManager();
 			$this->testProgressTracker();
 			$this->testMediaAuditor();
+			$this->testIndividualCompressionLevel();
 			$this->testTranslations();
 
 			echo "\n---------------------------------------------------------\n";
@@ -1025,8 +1065,101 @@ namespace HA_Image_Optimizer_Tests {
 			$this->assert( empty( $cleared['items'] ), 'Audit cache cleared successfully' );
 		}
 
+		private function testIndividualCompressionLevel(): void {
+			echo "\n12. Testing Individual Compression Level & Custom Conversion Pipeline...\n";
+
+			// 1. Test CompressionLevel::fromString mappings and aliases
+			$this->assert( CompressionLevel::fromString( 'lossless' ) === CompressionLevel::LOSSLESS, 'fromString("lossless") returns LOSSLESS' );
+			$this->assert( CompressionLevel::fromString( 'niedrig' ) === CompressionLevel::LOSSLESS, 'fromString("niedrig") returns LOSSLESS' );
+			$this->assert( CompressionLevel::fromString( 'low' ) === CompressionLevel::LOSSLESS, 'fromString("low") returns LOSSLESS' );
+
+			$this->assert( CompressionLevel::fromString( 'smart' ) === CompressionLevel::SMART, 'fromString("smart") returns SMART' );
+			$this->assert( CompressionLevel::fromString( 'mittel' ) === CompressionLevel::SMART, 'fromString("mittel") returns SMART' );
+			$this->assert( CompressionLevel::fromString( 'medium' ) === CompressionLevel::SMART, 'fromString("medium") returns SMART' );
+
+			$this->assert( CompressionLevel::fromString( 'ultra' ) === CompressionLevel::ULTRA, 'fromString("ultra") returns ULTRA' );
+			$this->assert( CompressionLevel::fromString( 'hoch' ) === CompressionLevel::ULTRA, 'fromString("hoch") returns ULTRA' );
+			$this->assert( CompressionLevel::fromString( 'high' ) === CompressionLevel::ULTRA, 'fromString("high") returns ULTRA' );
+
+			$this->assert( CompressionLevel::fromString( 'default' ) === null, 'fromString("default") returns null (falls back to global)' );
+			$this->assert( CompressionLevel::fromString( null ) === null, 'fromString(null) returns null' );
+			$this->assert( CompressionLevel::fromString( '' ) === null, 'fromString("") returns null' );
+			$this->assert( CompressionLevel::fromString( 'non_existent' ) === null, 'fromString("non_existent") returns null' );
+
+			// 2. Test Selection and Badge Labels
+			$ultra = CompressionLevel::ULTRA;
+			$smart = CompressionLevel::SMART;
+			$lossless = CompressionLevel::LOSSLESS;
+
+			$this->assert( str_contains( $ultra->selection_label(), 'Hoch' ), 'Ultra selection label contains "Hoch"' );
+			$this->assert( str_contains( $smart->selection_label(), 'Mittel' ), 'Smart selection label contains "Mittel"' );
+			$this->assert( str_contains( $lossless->selection_label(), 'Niedrig' ), 'Lossless selection label contains "Niedrig"' );
+
+			$this->assert( str_contains( $ultra->badge_label(), 'Hoch' ), 'Ultra badge label contains "Hoch"' );
+			$this->assert( str_contains( $smart->badge_label(), 'Mittel' ), 'Smart badge label contains "Mittel"' );
+			$this->assert( str_contains( $lossless->badge_label(), 'Niedrig' ), 'Lossless badge label contains "Niedrig"' );
+
+			// 3. Test AttachmentProcessor::process with custom level
+			$tmpDir = sys_get_temp_dir() . '/ha_io_tests_' . uniqid();
+			@mkdir( $tmpDir, 0777, true );
+			$dummyImage = $tmpDir . '/custom_level_test.jpg';
+			file_put_contents( $dummyImage, str_repeat( 'A', 5000 ) );
+
+			$testAttachmentId = 555;
+			$GLOBALS['wp_test_attached_file'][ $testAttachmentId ] = $dummyImage;
+			$GLOBALS['wp_test_posts'][ $testAttachmentId ] = (object) [
+				'ID'             => $testAttachmentId,
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'image/jpeg',
+				'post_parent'    => 0,
+				'post_status'    => 'inherit',
+				'post_title'     => 'Custom Level Test',
+				'post_date'      => '2026-10-25 00:00:00',
+				'post_date_gmt'  => '2026-10-25 00:00:00',
+			];
+
+			// Process with custom level 'ultra' (Hoch)
+			AttachmentProcessor::process( $testAttachmentId, [], true, 'ultra' );
+			$savedLevel = get_post_meta( $testAttachmentId, '_ha_io_custom_level', true );
+			$data       = get_post_meta( $testAttachmentId, '_ha_io_data', true );
+
+			$this->assert( 'ultra' === $savedLevel, 'Custom level "ultra" saved in postmeta _ha_io_custom_level' );
+			$this->assert( isset( $data['level_original'] ) && 'ultra' === $data['level_original'], 'Optimization stats recorded level_original as "ultra"' );
+			$this->assert( isset( $data['custom_level'] ) && 'ultra' === $data['custom_level'], 'Optimization stats recorded custom_level as "ultra"' );
+
+			// Process with German alias 'niedrig' (Lossless)
+			AttachmentProcessor::process( $testAttachmentId, [], true, 'niedrig' );
+			$savedLevelLossless = get_post_meta( $testAttachmentId, '_ha_io_custom_level', true );
+			$dataLossless       = get_post_meta( $testAttachmentId, '_ha_io_data', true );
+
+			$this->assert( 'lossless' === $savedLevelLossless, 'Alias "niedrig" resolved and saved as "lossless"' );
+			$this->assert( isset( $dataLossless['level_original'] ) && 'lossless' === $dataLossless['level_original'], 'Optimization stats recorded level_original as "lossless"' );
+
+			// Reset to 'default'
+			AttachmentProcessor::process( $testAttachmentId, [], true, 'default' );
+			$clearedLevel = get_post_meta( $testAttachmentId, '_ha_io_custom_level', true );
+			$this->assert( empty( $clearedLevel ), 'Passing "default" cleared postmeta _ha_io_custom_level' );
+
+			// 4. Test BackupManager::restore cleans up _ha_io_custom_level
+			update_post_meta( $testAttachmentId, '_ha_io_custom_level', 'smart' );
+			update_post_meta( $testAttachmentId, '_ha_io_data', [ 'status' => 'optimized' ] );
+			$backupPath = BackupManager::get_backup_file_path( $testAttachmentId, $dummyImage );
+			wp_mkdir_p( dirname( $backupPath ) );
+			file_put_contents( $backupPath, str_repeat( 'A', 5000 ) );
+
+			$restored = BackupManager::restore( $testAttachmentId );
+			$this->assert( $restored, 'BackupManager restored attachment successfully' );
+			$this->assert( empty( get_post_meta( $testAttachmentId, '_ha_io_custom_level', true ) ), 'BackupManager::restore cleared _ha_io_custom_level postmeta' );
+			$this->assert( empty( get_post_meta( $testAttachmentId, '_ha_io_data', true ) ), 'BackupManager::restore cleared _ha_io_data postmeta' );
+
+			// Cleanup
+			@unlink( $dummyImage );
+			@unlink( $backupPath );
+			@rmdir( $tmpDir );
+		}
+
 		private function testTranslations(): void {
-			echo "\n12. Testing Language Files Integrity (26 Locales)...\n";
+			echo "\n13. Testing Language Files Integrity (26 Locales)...\n";
 
 			$potFile = $this->rootDir . '/languages/ha-image-optimizer.pot';
 			$this->assert( file_exists( $potFile ), 'Template ha-image-optimizer.pot exists' );

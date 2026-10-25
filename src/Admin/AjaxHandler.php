@@ -64,8 +64,13 @@ class AjaxHandler {
 			wp_send_json_error( [ 'message' => esc_html__( 'Ungültige Bild-ID.', 'ha-image-optimizer' ) ], 400 );
 		}
 
+		$level = isset( $_POST['level'] ) ? sanitize_key( $_POST['level'] ) : null;
+		if ( '' === $level ) {
+			$level = null;
+		}
+
 		try {
-			AttachmentProcessor::process( $attachment_id, null, true );
+			AttachmentProcessor::process( $attachment_id, null, true, $level );
 			$data = get_post_meta( $attachment_id, '_ha_io_data', true );
 
 			wp_send_json_success( [

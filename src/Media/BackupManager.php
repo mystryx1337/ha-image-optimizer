@@ -147,6 +147,7 @@ class BackupManager {
 
 		// 4. Clear optimization metadata
 		delete_post_meta( $attachment_id, '_ha_io_data' );
+		delete_post_meta( $attachment_id, '_ha_io_custom_level' );
 
 		// 5. Delete backup file itself
 		@unlink( $backup_path );

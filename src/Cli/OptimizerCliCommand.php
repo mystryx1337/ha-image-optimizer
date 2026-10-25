@@ -11,6 +11,7 @@ use ha\ImageOptimizer\Common\Environment;
 use ha\ImageOptimizer\Bulk\ProgressTracker;
 use ha\ImageOptimizer\Bulk\BulkProcessor;
 use ha\ImageOptimizer\Media\BackupManager;
+use ha\ImageOptimizer\Media\AttachmentProcessor;
 use ha\ImageOptimizer\Media\CustomFolderProcessor;
 use ha\ImageOptimizer\Auditor\MediaAuditor;
 use WP_CLI;
@@ -81,6 +82,12 @@ class OptimizerCliCommand {
 	 *
 	 * ## OPTIONS
 	 *
+	 * [--id=<int>]
+	 * : Optimize a specific single attachment ID.
+	 *
+	 * [--level=<string>]
+	 * : Custom compression level ('ultra'/'hoch', 'smart'/'mittel', 'lossless'/'niedrig', 'default').
+	 *
 	 * [--all]
 	 * : Process all images including already optimized ones.
 	 *
@@ -93,6 +100,7 @@ class OptimizerCliCommand {
 	 * ## EXAMPLES
 	 *
 	 *     wp ha-optimizer optimize
+	 *     wp ha-optimizer optimize --id=123 --level=ultra
 	 *     wp ha-optimizer optimize --all --force
 	 *
 	 * @param array<string> $args Positional arguments.
@@ -100,6 +108,24 @@ class OptimizerCliCommand {
 	 * @return void
 	 */
 	public function optimize( array $args, array $assoc_args ): void {
+		if ( ! empty( $assoc_args['id'] ) ) {
+			$id    = absint( $assoc_args['id'] );
+			$level = isset( $assoc_args['level'] ) ? (string) $assoc_args['level'] : null;
+			$force = ! empty( $assoc_args['force'] ) || ! empty( $assoc_args['all'] );
+
+			WP_CLI::log( sprintf( 'Optimiere Bild ID %d (Stufe: %s)...', $id, $level ?: 'Standard' ) );
+			try {
+				AttachmentProcessor::process( $id, null, $force, $level );
+				$data  = get_post_meta( $id, '_ha_io_data', true );
+				$saved = size_format( (int) ( $data['total']['saved'] ?? 0 ) );
+				$pct   = number_format_i18n( (float) ( $data['total']['percent'] ?? 0.0 ), 1 );
+				WP_CLI::success( sprintf( 'Bild ID %d erfolgreich optimiert! Ersparnis: %s (%s%%).', $id, $saved, $pct ) );
+			} catch ( \Throwable $e ) {
+				WP_CLI::error( sprintf( 'Fehler beim Optimieren von Bild ID %d: %s', $id, $e->getMessage() ) );
+			}
+			return;
+		}
+
 		$all        = ! empty( $assoc_args['all'] );
 		$force      = ! empty( $assoc_args['force'] ) || $all;
 		$batch_size = isset( $assoc_args['batch-size'] ) ? absint( $assoc_args['batch-size'] ) : 25;

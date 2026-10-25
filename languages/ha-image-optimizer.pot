@@ -309,3 +309,67 @@ msgstr "Originalbild ist sicher im Backup gespeichert."
 #: templates/media-details-meta-box.php
 msgid "Kein Backup vorhanden."
 msgstr "Kein Backup vorhanden."
+
+#: src/Common/CompressionLevel.php
+msgid "Hoch (Maximal - ca. 72% Qualität)"
+msgstr "Hoch (Maximal - ca. 72% Qualität)"
+
+#: src/Common/CompressionLevel.php
+msgid "Mittel (Ausgewogen - ca. 82% Qualität)"
+msgstr "Mittel (Ausgewogen - ca. 82% Qualität)"
+
+#: src/Common/CompressionLevel.php
+msgid "Niedrig (Verlustfrei - 100% Schärfe)"
+msgstr "Niedrig (Verlustfrei - 100% Schärfe)"
+
+#: src/Common/CompressionLevel.php
+msgid "Hoch (Ultra)"
+msgstr "Hoch (Ultra)"
+
+#: src/Common/CompressionLevel.php
+msgid "Mittel (Smart)"
+msgstr "Mittel (Smart)"
+
+#: src/Common/CompressionLevel.php
+msgid "Niedrig (Verlustfrei)"
+msgstr "Niedrig (Verlustfrei)"
+
+#: src/Admin/MediaColumn.php
+msgid "Standard (Global)"
+msgstr "Standard (Global)"
+
+#: src/Admin/MediaColumn.php
+msgid "Hoch (Maximal)"
+msgstr "Hoch (Maximal)"
+
+#: src/Admin/MediaColumn.php
+msgid "Mittel (Ausgewogen)"
+msgstr "Mittel (Ausgewogen)"
+
+#: src/Admin/MediaColumn.php
+msgid "Niedrig (Verlustfrei)"
+msgstr "Niedrig (Verlustfrei)"
+
+#: templates/media-details-meta-box.php
+msgid "Komprimierung für dieses Bild:"
+msgstr "Komprimierung für dieses Bild:"
+
+#: templates/media-details-meta-box.php
+msgid "Standard (Globale Einstellung)"
+msgstr "Standard (Globale Einstellung)"
+
+#: templates/media-details-meta-box.php
+msgid "Standard-Stufe"
+msgstr "Standard-Stufe"
+
+#: templates/media-details-meta-box.php
+msgid "Individuelle Komprimierungsstufe ändern:"
+msgstr "Individuelle Komprimierungsstufe ändern:"
+
+#: templates/media-details-meta-box.php
+msgid "Aktuell aktiv: %s. Beim erneuten Optimieren wird das Bild aus dem Original-Backup verlustfrei mit dieser Stufe neu berechnet."
+msgstr "Aktuell aktiv: %s. Beim erneuten Optimieren wird das Bild aus dem Original-Backup verlustfrei mit dieser Stufe neu berechnet."
+
+#: templates/media-details-meta-box.php
+msgid "Aktuell gilt die globale Standard-Einstellung. Wähle eine individuelle Stufe (Hoch, Mittel oder Niedrig), um dieses Bild gezielt abweichend zu komprimieren."
+msgstr "Aktuell gilt die globale Standard-Einstellung. Wähle eine individuelle Stufe (Hoch, Mittel oder Niedrig), um dieses Bild gezielt abweichend zu komprimieren."

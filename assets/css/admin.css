@@ -403,7 +403,33 @@
 .ha-io-badge-green { background: #edfaef; color: #1a7f37; border: 1px solid #abdeb4; }
 .ha-io-badge-blue { background: #e7f5fa; color: #0073aa; border: 1px solid #bde4f5; }
 .ha-io-badge-purple { background: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+.ha-io-badge-orange { background: #fff8eb; color: #b45309; border: 1px solid #fde68a; }
 .ha-io-badge-engine { background: #f0f4f8; color: #2c3338; font-size: 0.75rem; margin-inline-start: 8px; }
+
+/* Custom Level Select Elements in Media Column & Modals */
+.ha-io-level-select-wrap {
+	margin: 5px 0;
+}
+
+.ha-io-level-select {
+	font-size: 11px !important;
+	height: 26px !important;
+	line-height: 24px !important;
+	padding: 0 6px !important;
+	max-width: 145px;
+	border: 1px solid #8c8f94 !important;
+	border-radius: 4px !important;
+	background-color: #fff !important;
+	color: #2c3338 !important;
+	cursor: pointer;
+}
+
+.ha-io-col-unoptimized,
+.ha-io-col-optimized {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
 
 /* Meta Card & Table in Media modal */
 .ha-io-meta-card {

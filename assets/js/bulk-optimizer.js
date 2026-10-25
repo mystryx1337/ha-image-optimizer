@@ -15,6 +15,17 @@
 			const attachmentId = $btn.data('id');
 			if (!attachmentId) return;
 
+			// Find level select in nearby context or by data-id
+			let level = '';
+			const $container = $btn.closest('.ha-io-col-optimized, .ha-io-col-unoptimized, .ha-io-meta-card, tr, .attachment-details');
+			let $select = $container.find('.ha-io-level-select');
+			if (!$select.length) {
+				$select = $('.ha-io-level-select[data-id="' + attachmentId + '"]');
+			}
+			if ($select.length) {
+				level = $select.val() || '';
+			}
+
 			const origText = $btn.text();
 			$btn.prop('disabled', true).text(ha_io_vars.i18n.optimizing || 'Optimiere...');
 
@@ -24,7 +35,8 @@
 				data: {
 					action: 'ha_io_optimize_single',
 					nonce: ha_io_vars.nonce,
-					attachment_id: attachmentId
+					attachment_id: attachmentId,
+					level: level
 				},
 				success: function (res) {
 					if (res.success) {

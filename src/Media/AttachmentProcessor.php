@@ -51,9 +51,10 @@ class AttachmentProcessor {
 	 * @param int                        $attachment_id Attachment ID.
 	 * @param array<string, mixed>|null  $metadata Optional metadata if already loaded.
 	 * @param bool                       $force Whether to force re-optimization.
+	 * @param string|null                $custom_level Optional custom compression level ('ultra'/'hoch', 'smart'/'mittel', 'lossless'/'niedrig', 'default').
 	 * @return array<string, mixed>
 	 */
-	public static function process( int $attachment_id, ?array $metadata = null, bool $force = false ): array {
+	public static function process( int $attachment_id, ?array $metadata = null, bool $force = false, ?string $custom_level = null ): array {
 		@set_time_limit( 60 );
 		wp_raise_memory_limit( 'image' );
 
@@ -87,6 +88,16 @@ class AttachmentProcessor {
 			$backup_file = BackupManager::get_backup_file_path( $attachment_id, $file );
 			if ( file_exists( $backup_file ) ) {
 				@copy( $backup_file, $file );
+				// Clean existing Next-Gen formats before re-generating
+				BackupManager::clean_nextgen_files( $attachment_id );
+				// Re-create intermediate sizes from uncompressed master if supported
+				if ( function_exists( 'wp_create_image_subsizes' ) ) {
+					$fresh_subsizes = wp_create_image_subsizes( $file, $attachment_id );
+					if ( ! empty( $fresh_subsizes['sizes'] ) ) {
+						$metadata['sizes'] = $fresh_subsizes['sizes'];
+						wp_update_attachment_metadata( $attachment_id, $metadata );
+					}
+				}
 			}
 		}
 
@@ -106,12 +117,40 @@ class AttachmentProcessor {
 			return $metadata;
 		}
 
-		$orig_level_key = $settings['compression_original'] ?? 'lossless';
-		$sizes_level_key= $settings['compression_sizes'] ?? 'smart';
+		// Resolve compression levels: Custom Level vs. Global Settings
+		$resolved_custom_level = null;
+		if ( null !== $custom_level ) {
+			if ( 'default' === $custom_level || '' === trim( $custom_level ) ) {
+				delete_post_meta( $attachment_id, '_ha_io_custom_level' );
+			} else {
+				$parsed = CompressionLevel::fromString( $custom_level );
+				if ( $parsed ) {
+					$resolved_custom_level = $parsed->value;
+					update_post_meta( $attachment_id, '_ha_io_custom_level', $resolved_custom_level );
+				}
+			}
+		} else {
+			$saved_custom = (string) get_post_meta( $attachment_id, '_ha_io_custom_level', true );
+			if ( ! empty( $saved_custom ) ) {
+				$parsed = CompressionLevel::fromString( $saved_custom );
+				if ( $parsed ) {
+					$resolved_custom_level = $parsed->value;
+				}
+			}
+		}
 
-		$orig_level  = CompressionLevel::tryFrom( $orig_level_key ) ?? CompressionLevel::LOSSLESS;
-		$sizes_level = CompressionLevel::tryFrom( $sizes_level_key ) ?? CompressionLevel::SMART;
-		$keep_exif   = ! empty( $settings['keep_exif'] );
+		if ( $resolved_custom_level ) {
+			$level_enum  = CompressionLevel::from( $resolved_custom_level );
+			$orig_level  = $level_enum;
+			$sizes_level = $level_enum;
+		} else {
+			$orig_level_key  = $settings['compression_original'] ?? 'lossless';
+			$sizes_level_key = $settings['compression_sizes'] ?? 'smart';
+			$orig_level      = CompressionLevel::tryFrom( $orig_level_key ) ?? CompressionLevel::LOSSLESS;
+			$sizes_level     = CompressionLevel::tryFrom( $sizes_level_key ) ?? CompressionLevel::SMART;
+		}
+
+		$keep_exif = ! empty( $settings['keep_exif'] );
 
 		$stats = [
 			'status'         => 'optimized',
@@ -119,6 +158,7 @@ class AttachmentProcessor {
 			'engine'         => $optimizer->get_name(),
 			'level_original' => $orig_level->value,
 			'level_sizes'    => $sizes_level->value,
+			'custom_level'   => $resolved_custom_level,
 			'original'       => [],
 			'sizes'          => [],
 			'total'          => [

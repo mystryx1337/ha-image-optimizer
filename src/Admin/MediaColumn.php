@@ -9,6 +9,7 @@ namespace ha\ImageOptimizer\Admin;
 
 use ha\ImageOptimizer\Media\BackupManager;
 use ha\ImageOptimizer\Media\AttachmentProcessor;
+use ha\ImageOptimizer\Common\CompressionLevel;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -59,14 +60,29 @@ class MediaColumn {
 			return;
 		}
 
-		$data = get_post_meta( $post_id, '_ha_io_data', true );
+		$data         = get_post_meta( $post_id, '_ha_io_data', true );
+		$custom_level = (string) get_post_meta( $post_id, '_ha_io_custom_level', true );
+		if ( empty( $custom_level ) && ! empty( $data['custom_level'] ) ) {
+			$custom_level = (string) $data['custom_level'];
+		}
+		$level_enum = CompressionLevel::fromString( $custom_level );
 
 		if ( empty( $data ) || ! is_array( $data ) ) {
 			?>
-			<div class="ha-io-col-unoptimized">
-				<span class="ha-io-badge ha-io-badge-gray"><?php esc_html_e( 'Unoptimiert', 'ha-image-optimizer' ); ?></span>
+			<div class="ha-io-col-unoptimized" data-id="<?php echo esc_attr( $post_id ); ?>">
+				<div style="margin-bottom: 4px;">
+					<span class="ha-io-badge ha-io-badge-gray"><?php esc_html_e( 'Unoptimiert', 'ha-image-optimizer' ); ?></span>
+				</div>
+				<div class="ha-io-level-select-wrap">
+					<select class="ha-io-level-select" data-id="<?php echo esc_attr( $post_id ); ?>" title="<?php esc_attr_e( 'Komprimierungsstufe für dieses Bild', 'ha-image-optimizer' ); ?>">
+						<option value="default"><?php esc_html_e( 'Standard (Global)', 'ha-image-optimizer' ); ?></option>
+						<option value="ultra"><?php esc_html_e( 'Hoch (Maximal)', 'ha-image-optimizer' ); ?></option>
+						<option value="smart"><?php esc_html_e( 'Mittel (Ausgewogen)', 'ha-image-optimizer' ); ?></option>
+						<option value="lossless"><?php esc_html_e( 'Niedrig (Verlustfrei)', 'ha-image-optimizer' ); ?></option>
+					</select>
+				</div>
 				<div class="ha-io-actions">
-					<button type="button" class="button button-small ha-io-btn-optimize" data-id="<?php echo esc_attr( $post_id ); ?>">
+					<button type="button" class="button button-small button-primary ha-io-btn-optimize" data-id="<?php echo esc_attr( $post_id ); ?>">
 						<?php esc_html_e( 'Optimieren', 'ha-image-optimizer' ); ?>
 					</button>
 				</div>
@@ -80,6 +96,7 @@ class MediaColumn {
 		$has_backup  = BackupManager::has_backup( $post_id );
 		$has_webp    = ! empty( $data['original']['webp_size'] );
 		$has_avif    = ! empty( $data['original']['avif_size'] );
+		$level_badge = $level_enum ? $level_enum->badge_label() : '';
 
 		?>
 		<div class="ha-io-col-optimized" data-id="<?php echo esc_attr( $post_id ); ?>">
@@ -88,12 +105,34 @@ class MediaColumn {
 					-<?php echo esc_html( number_format_i18n( $percent, 1 ) ); ?>%
 					<span class="ha-io-bytes">(<?php echo esc_html( size_format( $saved_bytes ) ); ?>)</span>
 				</span>
+				<?php if ( $level_badge ) : ?>
+					<span class="ha-io-badge ha-io-badge-orange" title="<?php echo esc_attr( $level_enum ? $level_enum->selection_label() : '' ); ?>">
+						<?php echo esc_html( $level_badge ); ?>
+					</span>
+				<?php endif; ?>
 				<?php if ( $has_webp ) : ?>
 					<span class="ha-io-badge ha-io-badge-blue">WebP</span>
 				<?php endif; ?>
 				<?php if ( $has_avif ) : ?>
 					<span class="ha-io-badge ha-io-badge-purple">AVIF</span>
 				<?php endif; ?>
+			</div>
+
+			<div class="ha-io-level-select-wrap">
+				<select class="ha-io-level-select" data-id="<?php echo esc_attr( $post_id ); ?>" title="<?php esc_attr_e( 'Komprimierungsstufe für dieses Bild', 'ha-image-optimizer' ); ?>">
+					<option value="default" <?php selected( empty( $custom_level ) ); ?>>
+						<?php esc_html_e( 'Standard (Global)', 'ha-image-optimizer' ); ?>
+					</option>
+					<option value="ultra" <?php selected( $custom_level, 'ultra' ); ?>>
+						<?php esc_html_e( 'Hoch (Maximal)', 'ha-image-optimizer' ); ?>
+					</option>
+					<option value="smart" <?php selected( $custom_level, 'smart' ); ?>>
+						<?php esc_html_e( 'Mittel (Ausgewogen)', 'ha-image-optimizer' ); ?>
+					</option>
+					<option value="lossless" <?php selected( $custom_level, 'lossless' ); ?>>
+						<?php esc_html_e( 'Niedrig (Verlustfrei)', 'ha-image-optimizer' ); ?>
+					</option>
+				</select>
 			</div>
 
 			<div class="ha-io-actions">
