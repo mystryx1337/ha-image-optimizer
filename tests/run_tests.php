@@ -1100,10 +1100,19 @@ namespace HA_Image_Optimizer_Tests {
 			$this->assert( str_contains( $lossless->badge_label(), 'Niedrig' ), 'Lossless badge label contains "Niedrig"' );
 
 			// 3. Test AttachmentProcessor::process with custom level
-			$tmpDir = sys_get_temp_dir() . '/ha_io_tests_' . uniqid();
-			@mkdir( $tmpDir, 0777, true );
-			$dummyImage = $tmpDir . '/custom_level_test.jpg';
-			file_put_contents( $dummyImage, str_repeat( 'A', 5000 ) );
+			$uploadsDir = wp_upload_dir()['basedir'] . '/test_ci_img';
+			wp_mkdir_p( $uploadsDir );
+			$dummyImage = $uploadsDir . '/custom_level_test.jpg';
+
+			if ( function_exists( 'imagecreatetruecolor' ) ) {
+				$im = imagecreatetruecolor( 20, 20 );
+				$bg = imagecolorallocate( $im, 200, 100, 50 );
+				imagefilledrectangle( $im, 0, 0, 19, 19, $bg );
+				imagejpeg( $im, $dummyImage, 90 );
+				imagedestroy( $im );
+			} else {
+				file_put_contents( $dummyImage, base64_decode( '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=' ) );
+			}
 
 			$testAttachmentId = 555;
 			$GLOBALS['wp_test_attached_file'][ $testAttachmentId ] = $dummyImage;
@@ -1145,7 +1154,11 @@ namespace HA_Image_Optimizer_Tests {
 			update_post_meta( $testAttachmentId, '_ha_io_data', [ 'status' => 'optimized' ] );
 			$backupPath = BackupManager::get_backup_file_path( $testAttachmentId, $dummyImage );
 			wp_mkdir_p( dirname( $backupPath ) );
-			file_put_contents( $backupPath, str_repeat( 'A', 5000 ) );
+			if ( file_exists( $dummyImage ) ) {
+				@copy( $dummyImage, $backupPath );
+			} else {
+				file_put_contents( $backupPath, base64_decode( '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=' ) );
+			}
 
 			$restored = BackupManager::restore( $testAttachmentId );
 			$this->assert( $restored, 'BackupManager restored attachment successfully' );
@@ -1155,7 +1168,7 @@ namespace HA_Image_Optimizer_Tests {
 			// Cleanup
 			@unlink( $dummyImage );
 			@unlink( $backupPath );
-			@rmdir( $tmpDir );
+			@rmdir( $uploadsDir );
 		}
 
 		private function testTranslations(): void {

@@ -176,7 +176,11 @@ class AttachmentProcessor {
 		}
 		$stats['total']['before'] += $orig_before;
 
-		$orig_res   = $optimizer->optimize( $file, $orig_level, $keep_exif );
+		try {
+			$optimizer->optimize( $file, $orig_level, $keep_exif );
+		} catch ( \Throwable $e ) {
+			// Continue gracefully if image optimization fails
+		}
 		$orig_after = (int) filesize( $file );
 		$stats['total']['after'] += $orig_after;
 
@@ -189,17 +193,21 @@ class AttachmentProcessor {
 
 		// Next-Gen for Original
 		if ( ! empty( $settings['generate_webp'] ) ) {
-			$webp_path = WebpConverter::convert( $file, $orig_level->quality( 'image/webp' ) );
-			if ( $webp_path ) {
-				$stats['original']['webp_size'] = (int) filesize( $webp_path );
-			}
+			try {
+				$webp_path = WebpConverter::convert( $file, $orig_level->quality( 'image/webp' ) );
+				if ( $webp_path ) {
+					$stats['original']['webp_size'] = (int) filesize( $webp_path );
+				}
+			} catch ( \Throwable $e ) {}
 		}
 
 		if ( ! empty( $settings['generate_avif'] ) ) {
-			$avif_path = AvifConverter::convert( $file, $orig_level->quality( 'image/avif' ) );
-			if ( $avif_path ) {
-				$stats['original']['avif_size'] = (int) filesize( $avif_path );
-			}
+			try {
+				$avif_path = AvifConverter::convert( $file, $orig_level->quality( 'image/avif' ) );
+				if ( $avif_path ) {
+					$stats['original']['avif_size'] = (int) filesize( $avif_path );
+				}
+			} catch ( \Throwable $e ) {}
 		}
 
 		// 5. Optimize Sub-Sizes (Thumbnails)
@@ -223,7 +231,11 @@ class AttachmentProcessor {
 				}
 				$stats['total']['before'] += $sub_before;
 
-				$optimizer->optimize( $sub_file, $sizes_level, false );
+				try {
+					$optimizer->optimize( $sub_file, $sizes_level, false );
+				} catch ( \Throwable $e ) {
+					// Skip sub-size if compression fails
+				}
 				$sub_after = (int) filesize( $sub_file );
 				$stats['total']['after'] += $sub_after;
 
@@ -236,17 +248,21 @@ class AttachmentProcessor {
 
 				// Next-Gen for sub-size
 				if ( ! empty( $settings['generate_webp'] ) ) {
-					$sub_webp = WebpConverter::convert( $sub_file, $sizes_level->quality( 'image/webp' ) );
-					if ( $sub_webp ) {
-						$size_stat['webp_size'] = (int) filesize( $sub_webp );
-					}
+					try {
+						$sub_webp = WebpConverter::convert( $sub_file, $sizes_level->quality( 'image/webp' ) );
+						if ( $sub_webp ) {
+							$size_stat['webp_size'] = (int) filesize( $sub_webp );
+						}
+					} catch ( \Throwable $e ) {}
 				}
 
 				if ( ! empty( $settings['generate_avif'] ) ) {
-					$sub_avif = AvifConverter::convert( $sub_file, $sizes_level->quality( 'image/avif' ) );
-					if ( $sub_avif ) {
-						$size_stat['avif_size'] = (int) filesize( $sub_avif );
-					}
+					try {
+						$sub_avif = AvifConverter::convert( $sub_file, $sizes_level->quality( 'image/avif' ) );
+						if ( $sub_avif ) {
+							$size_stat['avif_size'] = (int) filesize( $sub_avif );
+						}
+					} catch ( \Throwable $e ) {}
 				}
 
 				$stats['sizes'][ $size_name ] = $size_stat;
