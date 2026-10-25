@@ -5,7 +5,7 @@ Tags: image optimizer, webp, avif, compression, performance, media library
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -42,6 +42,13 @@ Nein. Das Plugin arbeitet zu 100% lokal auf deinem Webserver über PHP Imagick o
 Gemäß den HA-Standards werden deine Backups und WebP-Dateien standardmäßig geschützt und nicht gelöscht. In den Einstellungen gibt es einen expliziten Schalter für die vollständige Bereinigung bei Deinstallation.
 
 == Changelog ==
+
+= 1.3.2 =
+* Neu: Individuelle Bildkomprimierung mit Stufenauswahl (Hoch / Mittel / Niedrig / Standard) direkt in der Mediathek-Listenansicht und im Attachment-Details-Modal.
+* Neu: Verlustfreie Neu-Berechnung bei Stufenänderung – Master-Original wird automatisch aus dem Backup wiederhergestellt und alle Thumbnails werden ohne Generationsverlust frisch berechnet.
+* Neu: Optische Kennzeichnung der individuellen Komprimierungsstufe via Badge.
+* Neu: WP-CLI Unterstützung für individuelle Stufen (`wp ha-optimizer optimize --id=123 --level=hoch`).
+* Optimierung: Try-Catch-Absicherung und verbesserte Fehlerbehandlung in der Bildoptimierungs-Pipeline.
 
 = 1.3.1 =
 * Fix: Behebung eines Fehlers im generischen Postmeta-Scan, bei dem Attachments fälschlicherweise ihre eigenen WordPress-Metadaten (_wp_attached_file / _wp_attachment_metadata) als Verwendung gewertet haben.
