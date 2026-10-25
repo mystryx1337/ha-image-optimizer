@@ -215,6 +215,16 @@ namespace {
 		}
 	}
 
+	if ( ! function_exists( 'do_action' ) ) {
+		function do_action( $hook, ...$args ): void {
+			if ( ! empty( $GLOBALS['wp_test_actions'][ $hook ] ) ) {
+				foreach ( $GLOBALS['wp_test_actions'][ $hook ] as $callback ) {
+					call_user_func( $callback, ...$args );
+				}
+			}
+		}
+	}
+
 	if ( ! function_exists( 'add_filter' ) ) {
 		function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ): void {
 			$GLOBALS['wp_test_filters'][ $hook ][] = $callback;
