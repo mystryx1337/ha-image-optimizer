@@ -10,6 +10,7 @@
  */
 
 use ha\ImageOptimizer\Common\CompressionLevel;
+use ha\ImageOptimizer\Engine\SizeGuard;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -21,9 +22,34 @@ if ( empty( $custom_level ) && ! empty( $data['custom_level'] ) ) {
 }
 $custom_enum = CompressionLevel::fromString( $custom_level );
 
-if ( empty( $data ) || ! is_array( $data ) ) : ?>
+$meta        = wp_get_attachment_metadata( $post->ID );
+$dim_w       = ! empty( $meta['width'] ) ? (int) $meta['width'] : 0;
+$dim_h       = ! empty( $meta['height'] ) ? (int) $meta['height'] : 0;
+$sizes_count = ! empty( $meta['sizes'] ) && is_array( $meta['sizes'] ) ? count( $meta['sizes'] ) : 0;
+
+if ( empty( $data ) || ! is_array( $data ) ) :
+	$file        = get_attached_file( $post->ID );
+	$file_size   = ( $file && file_exists( $file ) ) ? (int) filesize( $file ) : 0;
+	$total_unopt = $file_size;
+	if ( ! empty( $meta['sizes'] ) && is_array( $meta['sizes'] ) && $file ) {
+		$base_dir = trailingslashit( dirname( $file ) );
+		foreach ( $meta['sizes'] as $sz ) {
+			if ( ! empty( $sz['file'] ) && file_exists( $base_dir . $sz['file'] ) ) {
+				$total_unopt += (int) filesize( $base_dir . $sz['file'] );
+			}
+		}
+	}
+	?>
 	<div class="ha-io-meta-card ha-io-meta-unoptimized" data-id="<?php echo esc_attr( $post->ID ); ?>">
-		<p style="margin-top: 0;"><?php esc_html_e( 'Dieses Bild wurde noch nicht optimiert.', 'ha-image-optimizer' ); ?></p>
+		<p style="margin-top: 0; margin-bottom: 8px;">
+			<?php esc_html_e( 'Dieses Bild wurde noch nicht optimiert.', 'ha-image-optimizer' ); ?>
+			<?php if ( $total_unopt > 0 ) : ?>
+				— <strong><?php echo esc_html( SizeGuard::format_size( $total_unopt, 1 ) ); ?></strong>
+			<?php endif; ?>
+			<?php if ( $dim_w && $dim_h ) : ?>
+				<span class="description">(<?php echo esc_html( $dim_w . ' × ' . $dim_h . ' px' ); ?><?php if ( $sizes_count > 0 ) : ?>, +<?php echo esc_html( (string) $sizes_count ); ?> <?php echo esc_html( _n( 'Größe', 'Größen', $sizes_count, 'ha-image-optimizer' ) ); ?><?php endif; ?>)</span>
+			<?php endif; ?>
+		</p>
 		<div class="ha-io-meta-level-choice" style="margin-bottom: 12px;">
 			<label for="ha-io-meta-level-<?php echo esc_attr( $post->ID ); ?>" style="display:block; font-weight: 600; margin-bottom: 6px;">
 				<?php esc_html_e( 'Komprimierung für dieses Bild:', 'ha-image-optimizer' ); ?>
@@ -70,15 +96,17 @@ $engine        = $data['engine'] ?? 'Lokal';
 			<?php endif; ?>
 		</div>
 		<div class="ha-io-meta-summary-badge">
-			-<?php echo esc_html( number_format_i18n( $saved_percent, 1 ) ); ?>%
-			<span class="ha-io-bytes">(<?php echo esc_html( size_format( $saved_bytes ) ); ?> gespart)</span>
+			<?php echo esc_html( SizeGuard::format_size( $total_before, 1 ) ); ?> → <?php echo esc_html( SizeGuard::format_size( $total_after, 1 ) ); ?>
+			<span class="ha-io-bytes" style="color: #1a7f37; margin-left: 6px;">
+				(-<?php echo esc_html( number_format_i18n( $saved_percent, 1 ) ); ?>% / <?php echo esc_html( SizeGuard::format_size( $saved_bytes, 1 ) ); ?> gespart)
+			</span>
 		</div>
 	</div>
 
 	<table class="ha-io-stats-table widefat striped">
 		<thead>
 			<tr>
-				<th><?php esc_html_e( 'Bildgröße', 'ha-image-optimizer' ); ?></th>
+				<th><?php esc_html_e( 'Bildgröße & Auflösung', 'ha-image-optimizer' ); ?></th>
 				<th><?php esc_html_e( 'Vorher', 'ha-image-optimizer' ); ?></th>
 				<th><?php esc_html_e( 'Nachher', 'ha-image-optimizer' ); ?></th>
 				<th><?php esc_html_e( 'Ersparnis', 'ha-image-optimizer' ); ?></th>
@@ -87,40 +115,52 @@ $engine        = $data['engine'] ?? 'Lokal';
 		</thead>
 		<tbody>
 			<tr>
-				<td><strong><?php esc_html_e( 'Originalbild (Master)', 'ha-image-optimizer' ); ?></strong></td>
-				<td><?php echo esc_html( size_format( (int) ( $orig['before'] ?? 0 ) ) ); ?></td>
-				<td><?php echo esc_html( size_format( (int) ( $orig['after'] ?? 0 ) ) ); ?></td>
+				<td>
+					<strong><?php esc_html_e( 'Originalbild (Master)', 'ha-image-optimizer' ); ?></strong>
+					<?php if ( $dim_w && $dim_h ) : ?>
+						<span class="description">(<?php echo esc_html( $dim_w . ' × ' . $dim_h . ' px' ); ?>)</span>
+					<?php endif; ?>
+				</td>
+				<td><?php echo esc_html( SizeGuard::format_size( (int) ( $orig['before'] ?? 0 ), 1 ) ); ?></td>
+				<td><?php echo esc_html( SizeGuard::format_size( (int) ( $orig['after'] ?? 0 ), 1 ) ); ?></td>
 				<td>
 					<span class="ha-io-text-green">
 						-<?php echo esc_html( number_format_i18n( (float) ( $orig['percent'] ?? 0 ), 1 ) ); ?>%
+						<span class="description" style="font-size: 11px;">(-<?php echo esc_html( SizeGuard::format_size( (int) ( $orig['saved'] ?? 0 ), 1 ) ); ?>)</span>
 					</span>
 				</td>
 				<td>
 					<?php if ( ! empty( $orig['webp_size'] ) ) : ?>
-						<span class="ha-io-pill">WebP: <?php echo esc_html( size_format( $orig['webp_size'] ) ); ?></span>
+						<span class="ha-io-pill">WebP: <?php echo esc_html( SizeGuard::format_size( $orig['webp_size'], 1 ) ); ?></span>
 					<?php endif; ?>
 					<?php if ( ! empty( $orig['avif_size'] ) ) : ?>
-						<span class="ha-io-pill">AVIF: <?php echo esc_html( size_format( $orig['avif_size'] ) ); ?></span>
+						<span class="ha-io-pill">AVIF: <?php echo esc_html( SizeGuard::format_size( $orig['avif_size'], 1 ) ); ?></span>
 					<?php endif; ?>
 				</td>
 			</tr>
 
 			<?php foreach ( $sizes as $size_name => $s ) : ?>
 				<tr>
-					<td><code><?php echo esc_html( $size_name ); ?></code></td>
-					<td><?php echo esc_html( size_format( (int) ( $s['before'] ?? 0 ) ) ); ?></td>
-					<td><?php echo esc_html( size_format( (int) ( $s['after'] ?? 0 ) ) ); ?></td>
+					<td>
+						<code><?php echo esc_html( $size_name ); ?></code>
+						<?php if ( ! empty( $meta['sizes'][ $size_name ]['width'] ) && ! empty( $meta['sizes'][ $size_name ]['height'] ) ) : ?>
+							<span class="description">(<?php echo esc_html( $meta['sizes'][ $size_name ]['width'] . ' × ' . $meta['sizes'][ $size_name ]['height'] . ' px' ); ?>)</span>
+						<?php endif; ?>
+					</td>
+					<td><?php echo esc_html( SizeGuard::format_size( (int) ( $s['before'] ?? 0 ), 1 ) ); ?></td>
+					<td><?php echo esc_html( SizeGuard::format_size( (int) ( $s['after'] ?? 0 ), 1 ) ); ?></td>
 					<td>
 						<span class="ha-io-text-green">
 							-<?php echo esc_html( number_format_i18n( (float) ( $s['percent'] ?? 0 ), 1 ) ); ?>%
+							<span class="description" style="font-size: 11px;">(-<?php echo esc_html( SizeGuard::format_size( (int) ( $s['saved'] ?? 0 ), 1 ) ); ?>)</span>
 						</span>
 					</td>
 					<td>
 						<?php if ( ! empty( $s['webp_size'] ) ) : ?>
-							<span class="ha-io-pill">WebP: <?php echo esc_html( size_format( $s['webp_size'] ) ); ?></span>
+							<span class="ha-io-pill">WebP: <?php echo esc_html( SizeGuard::format_size( $s['webp_size'], 1 ) ); ?></span>
 						<?php endif; ?>
 						<?php if ( ! empty( $s['avif_size'] ) ) : ?>
-							<span class="ha-io-pill">AVIF: <?php echo esc_html( size_format( $s['avif_size'] ) ); ?></span>
+							<span class="ha-io-pill">AVIF: <?php echo esc_html( SizeGuard::format_size( $s['avif_size'], 1 ) ); ?></span>
 						<?php endif; ?>
 					</td>
 				</tr>

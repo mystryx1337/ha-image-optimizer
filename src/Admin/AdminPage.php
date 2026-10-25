@@ -148,6 +148,7 @@ class AdminPage {
 				'confirm_rest' => esc_html__( 'Möchtest du das Originalbild wirklich wiederherstellen?', 'ha-image-optimizer' ),
 				'pause'        => esc_html__( 'Pausieren', 'ha-image-optimizer' ),
 				'resume'       => esc_html__( 'Fortsetzen', 'ha-image-optimizer' ),
+				'saved'        => esc_html__( 'gespart', 'ha-image-optimizer' ),
 			],
 		] );
 

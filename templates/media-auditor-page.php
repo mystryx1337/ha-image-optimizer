@@ -7,6 +7,8 @@
  * @var array<string, mixed> $audit_data
  */
 
+use ha\ImageOptimizer\Engine\SizeGuard;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -62,13 +64,13 @@ $last_scan   = ! empty( $audit_data['last_scan'] ) ? date_i18n( 'd.m.Y H:i', (in
 		<div class="ha-io-stat-box ha-io-stat-box-red">
 			<span class="ha-io-stat-number" id="ha-io-audit-stat-unattached"><?php echo esc_html( $counts['unattached_unused'] ); ?></span>
 			<span class="ha-io-stat-label"><?php esc_html_e( 'Vollständig verwaist', 'ha-image-optimizer' ); ?></span>
-			<strong style="color: #cf222e; font-size: 12px;" id="ha-io-audit-stat-unattached-bytes"><?php echo esc_html( size_format( $reclaimable['unattached'] ) ); ?></strong>
+			<strong style="color: #cf222e; font-size: 12px;" id="ha-io-audit-stat-unattached-bytes"><?php echo esc_html( SizeGuard::format_size( $reclaimable['unattached'], 1 ) ); ?></strong>
 		</div>
 
 		<div class="ha-io-stat-box ha-io-stat-box-yellow">
 			<span class="ha-io-stat-number" id="ha-io-audit-stat-attached"><?php echo esc_html( $counts['attached_unused'] ); ?></span>
 			<span class="ha-io-stat-label"><?php esc_html_e( 'Zugeordnet, aber inaktiv', 'ha-image-optimizer' ); ?></span>
-			<strong style="color: #9a6700; font-size: 12px;" id="ha-io-audit-stat-attached-bytes"><?php echo esc_html( size_format( $reclaimable['attached'] ) ); ?></strong>
+			<strong style="color: #9a6700; font-size: 12px;" id="ha-io-audit-stat-attached-bytes"><?php echo esc_html( SizeGuard::format_size( $reclaimable['attached'], 1 ) ); ?></strong>
 		</div>
 
 		<div class="ha-io-stat-box ha-io-stat-box-green">
@@ -78,7 +80,7 @@ $last_scan   = ! empty( $audit_data['last_scan'] ) ? date_i18n( 'd.m.Y H:i', (in
 		</div>
 
 		<div class="ha-io-stat-box ha-io-stat-box-blue">
-			<span class="ha-io-stat-number" id="ha-io-audit-stat-reclaimable"><?php echo esc_html( size_format( $reclaimable['total'] ) ); ?></span>
+			<span class="ha-io-stat-number" id="ha-io-audit-stat-reclaimable"><?php echo esc_html( SizeGuard::format_size( $reclaimable['total'], 1 ) ); ?></span>
 			<span class="ha-io-stat-label"><?php esc_html_e( 'Freigebbarer Speicher', 'ha-image-optimizer' ); ?></span>
 			<small style="color: #0969da; font-size: 11px;"><?php esc_html_e( 'Inkl. Thumbnails & WebP/AVIF', 'ha-image-optimizer' ); ?></small>
 		</div>

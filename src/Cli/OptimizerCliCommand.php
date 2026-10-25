@@ -14,6 +14,7 @@ use ha\ImageOptimizer\Media\BackupManager;
 use ha\ImageOptimizer\Media\AttachmentProcessor;
 use ha\ImageOptimizer\Media\CustomFolderProcessor;
 use ha\ImageOptimizer\Auditor\MediaAuditor;
+use ha\ImageOptimizer\Engine\SizeGuard;
 use WP_CLI;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -65,7 +66,7 @@ class OptimizerCliCommand {
 		WP_CLI::line( sprintf( 'Bilder Gesamt: %d', $stats['total_images'] ) );
 		WP_CLI::line( sprintf( 'Bereits Optimiert: %d', $stats['optimized_images'] ) );
 		WP_CLI::line( sprintf( 'Noch Unoptimiert: %d', $stats['unoptimized'] ) );
-		WP_CLI::line( sprintf( 'Gesparter Speicherplatz: %s (%s%%)', size_format( $stats['saved_bytes'] ), $stats['saved_percent'] ) );
+		WP_CLI::line( sprintf( 'Gesparter Speicherplatz: %s (%s%%)', SizeGuard::format_size( $stats['saved_bytes'], 1 ), $stats['saved_percent'] ) );
 
 		if ( ! empty( $custom_stats['total_images'] ) ) {
 			WP_CLI::line( '' );
@@ -73,7 +74,7 @@ class OptimizerCliCommand {
 			WP_CLI::line( sprintf( 'Dateien Gesamt: %d', $custom_stats['total_images'] ) );
 			WP_CLI::line( sprintf( 'Bereits Optimiert: %d', $custom_stats['optimized_images'] ) );
 			WP_CLI::line( sprintf( 'Noch Unoptimiert: %d', $custom_stats['unoptimized'] ) );
-			WP_CLI::line( sprintf( 'Gesparter Speicherplatz: %s (%s%%)', size_format( $custom_stats['saved_bytes'] ), $custom_stats['saved_percent'] ) );
+			WP_CLI::line( sprintf( 'Gesparter Speicherplatz: %s (%s%%)', SizeGuard::format_size( $custom_stats['saved_bytes'], 1 ), $custom_stats['saved_percent'] ) );
 		}
 	}
 
@@ -117,7 +118,7 @@ class OptimizerCliCommand {
 			try {
 				AttachmentProcessor::process( $id, null, $force, $level );
 				$data  = get_post_meta( $id, '_ha_io_data', true );
-				$saved = size_format( (int) ( $data['total']['saved'] ?? 0 ) );
+				$saved = SizeGuard::format_size( (int) ( $data['total']['saved'] ?? 0 ), 1 );
 				$pct   = number_format_i18n( (float) ( $data['total']['percent'] ?? 0.0 ), 1 );
 				WP_CLI::success( sprintf( 'Bild ID %d erfolgreich optimiert! Ersparnis: %s (%s%%).', $id, $saved, $pct ) );
 			} catch ( \Throwable $e ) {
@@ -156,7 +157,7 @@ class OptimizerCliCommand {
 		}
 
 		$progress->finish();
-		WP_CLI::success( sprintf( 'Optimierung abgeschlossen! Insgesamt wurden %s Speicherplatz gespart.', size_format( $total_saved ) ) );
+		WP_CLI::success( sprintf( 'Optimierung abgeschlossen! Insgesamt wurden %s Speicherplatz gespart.', SizeGuard::format_size( $total_saved, 1 ) ) );
 	}
 
 	/**
@@ -264,7 +265,7 @@ class OptimizerCliCommand {
 		}
 
 		$progress->finish();
-		WP_CLI::success( sprintf( 'Custom-Optimierung abgeschlossen! Insgesamt wurden %s Speicherplatz gespart.', size_format( $total_saved ) ) );
+		WP_CLI::success( sprintf( 'Custom-Optimierung abgeschlossen! Insgesamt wurden %s Speicherplatz gespart.', SizeGuard::format_size( $total_saved, 1 ) ) );
 	}
 
 	/**
@@ -450,7 +451,7 @@ class OptimizerCliCommand {
 		}
 
 		$total_bytes = array_sum( array_column( $orphans, 'disk_bytes' ) );
-		WP_CLI::line( sprintf( '%d vollständig verwaiste Medien gefunden (%s belegter Speicher).', count( $orphans ), size_format( $total_bytes ) ) );
+		WP_CLI::line( sprintf( '%d vollständig verwaiste Medien gefunden (%s belegter Speicher).', count( $orphans ), SizeGuard::format_size( $total_bytes, 1 ) ) );
 
 		if ( ! $yes ) {
 			$action_desc = $force ? 'DAUERHAFT LÖSCHEN' : 'in den Papierkorb verschieben';
@@ -468,7 +469,7 @@ class OptimizerCliCommand {
 		}
 		$progress->finish();
 
-		WP_CLI::success( sprintf( '%d verwaiste Medien erfolgreich bereinigt! %s Speicherplatz freigegeben.', $cleaned, size_format( $total_bytes ) ) );
+		WP_CLI::success( sprintf( '%d verwaiste Medien erfolgreich bereinigt! %s Speicherplatz freigegeben.', $cleaned, SizeGuard::format_size( $total_bytes, 1 ) ) );
 	}
 }
 

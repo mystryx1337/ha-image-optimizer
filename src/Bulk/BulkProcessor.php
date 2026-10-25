@@ -9,6 +9,7 @@ namespace ha\ImageOptimizer\Bulk;
 
 use ha\ImageOptimizer\Media\AttachmentProcessor;
 use ha\ImageOptimizer\Media\CustomFolderProcessor;
+use ha\ImageOptimizer\Engine\SizeGuard;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -56,9 +57,9 @@ class BulkProcessor {
 				$items[] = [
 					'id'          => $id,
 					'filename'    => $filename,
-					'before'      => size_format( $before_b ),
-					'after'       => size_format( $after_b ),
-					'saved'       => size_format( $saved_b ),
+					'before'      => SizeGuard::format_size( $before_b, 1 ),
+					'after'       => SizeGuard::format_size( $after_b, 1 ),
+					'saved'       => SizeGuard::format_size( $saved_b, 1 ),
 					'percent'     => number_format_i18n( $percent, 1 ),
 					'has_webp'    => ! empty( $data['original']['webp_size'] ),
 					'has_avif'    => ! empty( $data['original']['avif_size'] ),
@@ -111,9 +112,9 @@ class BulkProcessor {
 				$items[] = [
 					'id'       => $rel_path,
 					'filename' => $item['filename'] ?? wp_basename( $rel_path ),
-					'before'   => size_format( (int) ( $item['before'] ?? 0 ) ),
-					'after'    => size_format( (int) ( $item['after'] ?? 0 ) ),
-					'saved'    => size_format( $saved_b ),
+					'before'   => SizeGuard::format_size( (int) ( $item['before'] ?? 0 ), 1 ),
+					'after'    => SizeGuard::format_size( (int) ( $item['after'] ?? 0 ), 1 ),
+					'saved'    => SizeGuard::format_size( $saved_b, 1 ),
 					'percent'  => number_format_i18n( (float) ( $item['percent'] ?? 0.0 ), 1 ),
 					'has_webp' => ! empty( $item['has_webp'] ),
 					'has_avif' => ! empty( $item['has_avif'] ),

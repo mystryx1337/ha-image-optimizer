@@ -321,7 +321,7 @@
 				'<td><strong>' + escapeHtml(item.filename) + '</strong></td>' +
 				'<td>' + escapeHtml(item.before) + '</td>' +
 				'<td>' + escapeHtml(item.after) + '</td>' +
-				'<td><span class="ha-io-text-green">-' + escapeHtml(item.percent) + '%</span> (' + escapeHtml(item.saved) + ')</td>' +
+				'<td><span class="ha-io-text-green">-' + escapeHtml(item.percent) + '%</span> (' + escapeHtml(item.saved) + ' ' + (ha_io_vars.i18n.saved || 'gespart') + ')</td>' +
 				'<td>' + nextgenPills.join(' ') + '</td>' +
 				'</tr>';
 

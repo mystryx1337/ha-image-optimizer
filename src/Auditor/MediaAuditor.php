@@ -9,6 +9,7 @@ namespace ha\ImageOptimizer\Auditor;
 
 use ha\ImageOptimizer\Common\Settings;
 use ha\ImageOptimizer\Media\BackupManager;
+use ha\ImageOptimizer\Engine\SizeGuard;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -996,7 +997,7 @@ class MediaAuditor {
 			'parent_title'   => $parent_title,
 			'parent_url'     => $parent_id > 0 ? self::safe_admin_url( 'post.php?post=' . $parent_id . '&action=edit' ) : '',
 			'disk_bytes'     => $disk_bytes,
-			'disk_human'     => size_format( $disk_bytes ),
+			'disk_human'     => SizeGuard::format_size( $disk_bytes, 1 ),
 			'status'         => $status,
 			'references'     => $references,
 			'reference_desc' => implode( ', ', $reference_labels ),

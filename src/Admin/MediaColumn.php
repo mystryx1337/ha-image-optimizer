@@ -10,6 +10,7 @@ namespace ha\ImageOptimizer\Admin;
 use ha\ImageOptimizer\Media\BackupManager;
 use ha\ImageOptimizer\Media\AttachmentProcessor;
 use ha\ImageOptimizer\Common\CompressionLevel;
+use ha\ImageOptimizer\Engine\SizeGuard;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -67,12 +68,43 @@ class MediaColumn {
 		}
 		$level_enum = CompressionLevel::fromString( $custom_level );
 
+		$meta        = wp_get_attachment_metadata( $post_id );
+		$dim_w       = ! empty( $meta['width'] ) ? (int) $meta['width'] : 0;
+		$dim_h       = ! empty( $meta['height'] ) ? (int) $meta['height'] : 0;
+		$sizes_count = ! empty( $meta['sizes'] ) && is_array( $meta['sizes'] ) ? count( $meta['sizes'] ) : 0;
+
 		if ( empty( $data ) || ! is_array( $data ) ) {
+			$file        = get_attached_file( $post_id );
+			$file_size   = ( $file && file_exists( $file ) ) ? (int) filesize( $file ) : 0;
+			$total_unopt = $file_size;
+			if ( ! empty( $meta['sizes'] ) && is_array( $meta['sizes'] ) && $file ) {
+				$base_dir = trailingslashit( dirname( $file ) );
+				foreach ( $meta['sizes'] as $sz ) {
+					if ( ! empty( $sz['file'] ) && file_exists( $base_dir . $sz['file'] ) ) {
+						$total_unopt += (int) filesize( $base_dir . $sz['file'] );
+					}
+				}
+			}
 			?>
 			<div class="ha-io-col-unoptimized" data-id="<?php echo esc_attr( $post_id ); ?>">
-				<div style="margin-bottom: 4px;">
+				<div class="ha-io-status-row">
 					<span class="ha-io-badge ha-io-badge-gray"><?php esc_html_e( 'Unoptimiert', 'ha-image-optimizer' ); ?></span>
+					<?php if ( $total_unopt > 0 ) : ?>
+						<span class="ha-io-filesize-tag" title="<?php echo esc_attr( sprintf( __( 'Original: %s, Gesamt inkl. %d Zwischengrößen: %s', 'ha-image-optimizer' ), SizeGuard::format_size( $file_size, 1 ), $sizes_count, SizeGuard::format_size( $total_unopt, 1 ) ) ); ?>">
+							<strong><?php echo esc_html( SizeGuard::format_size( $total_unopt, 1 ) ); ?></strong>
+						</span>
+					<?php endif; ?>
 				</div>
+
+				<?php if ( $dim_w && $dim_h ) : ?>
+					<div class="ha-io-dimensions-info">
+						<span class="ha-io-dim-label"><?php echo esc_html( $dim_w . ' × ' . $dim_h . ' px' ); ?></span>
+						<?php if ( $sizes_count > 0 ) : ?>
+							<span class="ha-io-subsizes-label">(+<?php echo esc_html( (string) $sizes_count ); ?>)</span>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
+
 				<div class="ha-io-level-select-wrap">
 					<select class="ha-io-level-select" data-id="<?php echo esc_attr( $post_id ); ?>" title="<?php esc_attr_e( 'Komprimierungsstufe für dieses Bild', 'ha-image-optimizer' ); ?>">
 						<option value="default"><?php esc_html_e( 'Standard (Global)', 'ha-image-optimizer' ); ?></option>
@@ -81,6 +113,7 @@ class MediaColumn {
 						<option value="lossless"><?php esc_html_e( 'Niedrig (Verlustfrei)', 'ha-image-optimizer' ); ?></option>
 					</select>
 				</div>
+
 				<div class="ha-io-actions">
 					<button type="button" class="button button-small button-primary ha-io-btn-optimize" data-id="<?php echo esc_attr( $post_id ); ?>">
 						<?php esc_html_e( 'Optimieren', 'ha-image-optimizer' ); ?>
@@ -91,19 +124,29 @@ class MediaColumn {
 			return;
 		}
 
-		$percent     = (float) ( $data['total']['percent'] ?? 0.0 );
-		$saved_bytes = (int) ( $data['total']['saved'] ?? 0 );
-		$has_backup  = BackupManager::has_backup( $post_id );
-		$has_webp    = ! empty( $data['original']['webp_size'] );
-		$has_avif    = ! empty( $data['original']['avif_size'] );
-		$level_badge = $level_enum ? $level_enum->badge_label() : '';
+		$total_before = (int) ( $data['total']['before'] ?? 0 );
+		$total_after  = (int) ( $data['total']['after'] ?? 0 );
+		$saved_bytes  = (int) ( $data['total']['saved'] ?? 0 );
+		$percent      = (float) ( $data['total']['percent'] ?? 0.0 );
+		$has_backup   = BackupManager::has_backup( $post_id );
+		$has_webp     = ! empty( $data['original']['webp_size'] );
+		$has_avif     = ! empty( $data['original']['avif_size'] );
+		$level_badge  = $level_enum ? $level_enum->badge_label() : '';
 
 		?>
 		<div class="ha-io-col-optimized" data-id="<?php echo esc_attr( $post_id ); ?>">
+			<!-- Before -> After Size Flow -->
+			<div class="ha-io-size-flow" title="<?php esc_attr_e( 'Speicherplatz Gesamt (Vorher → Nachher)', 'ha-image-optimizer' ); ?>">
+				<span class="ha-io-size-before"><?php echo esc_html( SizeGuard::format_size( $total_before, 1 ) ); ?></span>
+				<span class="ha-io-size-arrow">→</span>
+				<span class="ha-io-size-after"><strong><?php echo esc_html( SizeGuard::format_size( $total_after, 1 ) ); ?></strong></span>
+			</div>
+
+			<!-- Savings & Badges -->
 			<div class="ha-io-badge-group">
-				<span class="ha-io-badge ha-io-badge-green">
+				<span class="ha-io-badge ha-io-badge-green" title="<?php echo esc_attr( sprintf( __( '%s gespart (-%s%%)', 'ha-image-optimizer' ), SizeGuard::format_size( $saved_bytes, 1 ), number_format_i18n( $percent, 1 ) ) ); ?>">
 					-<?php echo esc_html( number_format_i18n( $percent, 1 ) ); ?>%
-					<span class="ha-io-bytes">(<?php echo esc_html( size_format( $saved_bytes ) ); ?>)</span>
+					<span class="ha-io-bytes">(<?php echo esc_html( SizeGuard::format_size( $saved_bytes, 1 ) ); ?>)</span>
 				</span>
 				<?php if ( $level_badge ) : ?>
 					<span class="ha-io-badge ha-io-badge-orange" title="<?php echo esc_attr( $level_enum ? $level_enum->selection_label() : '' ); ?>">
@@ -117,6 +160,15 @@ class MediaColumn {
 					<span class="ha-io-badge ha-io-badge-purple">AVIF</span>
 				<?php endif; ?>
 			</div>
+
+			<?php if ( $dim_w && $dim_h ) : ?>
+				<div class="ha-io-dimensions-info">
+					<span class="ha-io-dim-label"><?php echo esc_html( $dim_w . ' × ' . $dim_h . ' px' ); ?></span>
+					<?php if ( $sizes_count > 0 ) : ?>
+						<span class="ha-io-subsizes-label">(+<?php echo esc_html( (string) $sizes_count ); ?>)</span>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
 
 			<div class="ha-io-level-select-wrap">
 				<select class="ha-io-level-select" data-id="<?php echo esc_attr( $post_id ); ?>" title="<?php esc_attr_e( 'Komprimierungsstufe für dieses Bild', 'ha-image-optimizer' ); ?>">

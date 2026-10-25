@@ -7,6 +7,8 @@
  * @var array<string, mixed> $stats
  */
 
+use ha\ImageOptimizer\Engine\SizeGuard;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -42,7 +44,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<span class="ha-io-stat-label"><?php esc_html_e( 'Noch Unoptimiert', 'ha-image-optimizer' ); ?></span>
 		</div>
 		<div class="ha-io-stat-box ha-io-stat-box-blue">
-			<span class="ha-io-stat-number" id="ha-io-stat-saved"><?php echo esc_html( size_format( $stats['saved_bytes'] ) ); ?></span>
+			<span class="ha-io-stat-number" id="ha-io-stat-saved"><?php echo esc_html( SizeGuard::format_size( $stats['saved_bytes'], 1 ) ); ?></span>
 			<span class="ha-io-stat-label">
 				<?php esc_html_e( 'Gesparter Speicherplatz', 'ha-image-optimizer' ); ?>
 				(-<span id="ha-io-stat-percent"><?php echo esc_html( $stats['saved_percent'] ); ?></span>%)
@@ -56,7 +58,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<strong><?php echo esc_html( $custom_stats['total_images'] ); ?></strong> <?php esc_html_e( 'Dateien gefunden', 'ha-image-optimizer' ); ?> &bull;
 			<strong><?php echo esc_html( $custom_stats['optimized_images'] ); ?></strong> <?php esc_html_e( 'optimiert', 'ha-image-optimizer' ); ?> &bull;
 			<strong><?php echo esc_html( $custom_stats['unoptimized'] ); ?></strong> <?php esc_html_e( 'noch offen', 'ha-image-optimizer' ); ?> &bull;
-			<strong><?php echo esc_html( size_format( $custom_stats['saved_bytes'] ) ); ?></strong> <?php esc_html_e( 'gespart', 'ha-image-optimizer' ); ?>
+			<strong><?php echo esc_html( SizeGuard::format_size( $custom_stats['saved_bytes'], 1 ) ); ?></strong> <?php esc_html_e( 'gespart', 'ha-image-optimizer' ); ?>
 		</div>
 	<?php endif; ?>
 

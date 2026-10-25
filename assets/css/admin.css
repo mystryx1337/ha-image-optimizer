@@ -428,7 +428,64 @@
 .ha-io-col-optimized {
 	display: flex;
 	flex-direction: column;
+	gap: 3px;
+}
+
+.ha-io-size-flow {
+	font-size: 12px;
+	color: #1d2327;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	line-height: 1.3;
+}
+
+.ha-io-size-before {
+	color: #646970;
+	text-decoration: line-through;
+	font-size: 11px;
+}
+
+.ha-io-size-arrow {
+	color: #8c8f94;
+	font-size: 11px;
+}
+
+.ha-io-size-after {
+	color: #1a7f37;
+	font-weight: 600;
+	font-size: 12px;
+}
+
+.ha-io-status-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+	line-height: 1.3;
+}
+
+.ha-io-filesize-tag {
+	font-size: 11px;
+	color: #2c3338;
+}
+
+.ha-io-dimensions-info {
+	font-size: 11px;
+	color: #646970;
+	line-height: 1.2;
+	display: flex;
+	align-items: center;
 	gap: 4px;
+}
+
+.ha-io-dim-label {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+.ha-io-subsizes-label {
+	color: #8c8f94;
+	font-size: 10px;
 }
 
 /* Meta Card & Table in Media modal */

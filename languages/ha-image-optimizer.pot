@@ -2,7 +2,7 @@
 # This file is distributed under the GPL-3.0.
 msgid ""
 msgstr ""
-"Project-Id-Version: HA Image Optimizer 1.3.2\n"
+"Project-Id-Version: HA Image Optimizer 1.3.3\n"
 "Report-Msgid-Bugs-To: https://github.com/mystryx1337/ha-image-optimizer/issues\n"
 "POT-Creation-Date: 2026-10-21T10:00:00+00:00\n"
 "MIME-Version: 1.0\n"
@@ -373,3 +373,19 @@ msgstr "Aktuell aktiv: %s. Beim erneuten Optimieren wird das Bild aus dem Origin
 #: templates/media-details-meta-box.php
 msgid "Aktuell gilt die globale Standard-Einstellung. Wähle eine individuelle Stufe (Hoch, Mittel oder Niedrig), um dieses Bild gezielt abweichend zu komprimieren."
 msgstr "Aktuell gilt die globale Standard-Einstellung. Wähle eine individuelle Stufe (Hoch, Mittel oder Niedrig), um dieses Bild gezielt abweichend zu komprimieren."
+
+#: src/Admin/MediaColumn.php
+msgid "Original: %s, Gesamt inkl. %d Zwischengrößen: %s"
+msgstr "Original: %s, Gesamt inkl. %d Zwischengrößen: %s"
+
+#: src/Admin/MediaColumn.php
+msgid "Speicherplatz Gesamt (Vorher → Nachher)"
+msgstr "Speicherplatz Gesamt (Vorher → Nachher)"
+
+#: src/Admin/MediaColumn.php
+msgid "%s gespart (-%s%%)"
+msgstr "%s gespart (-%s%%)"
+
+#: templates/media-details-meta-box.php
+msgid "Bildgröße & Auflösung"
+msgstr "Bildgröße & Auflösung"

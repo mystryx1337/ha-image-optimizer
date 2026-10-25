@@ -5,7 +5,7 @@ Tags: image optimizer, webp, avif, compression, performance, media library
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -42,6 +42,10 @@ Nein. Das Plugin arbeitet zu 100% lokal auf deinem Webserver über PHP Imagick o
 Gemäß den HA-Standards werden deine Backups und WebP-Dateien standardmäßig geschützt und nicht gelöscht. In den Einstellungen gibt es einen expliziten Schalter für die vollständige Bereinigung bei Deinstallation.
 
 == Changelog ==
+
+= 1.3.3 =
+* Neu: Bildgrößen- & Auflösungsanzeige in der Mediathek: Direkte Anzeige von Dateigrößen (Vorher → Nachher bzw. unoptimierte Gesamtgröße), Pixel-Auflösung (Breite × Höhe) und Zwischengrößenanzahl in der Mediathek-Tabelle und der Detailansicht.
+* Neu: Präzise Größenformatierung mit Dezimalstellen: Dateigrößen (KB, MB, GB) werden im gesamten Plugin nun mit mindestens einer Nachkommastelle ausgewiesen, um irreführende Rundungen wie "2MB -> 2MB (Ersparnis: 50 KB)" zu verhindern.
 
 = 1.3.2 =
 * Neu: Individuelle Bildkomprimierung mit Stufenauswahl (Hoch / Mittel / Niedrig / Standard) direkt in der Mediathek-Listenansicht und im Attachment-Details-Modal.

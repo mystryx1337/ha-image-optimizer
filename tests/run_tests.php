@@ -167,7 +167,9 @@ namespace {
 			}
 			$units = [ 'B', 'KB', 'MB', 'GB' ];
 			$i     = (int) floor( log( $bytes, 1024 ) );
-			return round( $bytes / pow( 1024, $i ), $decimals ) . ' ' . ( $units[ $i ] ?? 'B' );
+			$val   = $bytes / pow( 1024, $i );
+			$fmt   = number_format( (float) $val, $decimals, ',', '.' );
+			return $fmt . ' ' . ( $units[ $i ] ?? 'B' );
 		}
 	}
 
@@ -791,6 +793,14 @@ namespace HA_Image_Optimizer_Tests {
 			$ngKept = SizeGuard::protect_nextgen( $nextGen, 400 );
 			$this->assert( false === $ngKept, 'SizeGuard rejects NextGen file when larger than original' );
 			$this->assert( ! file_exists( $nextGen ), 'NextGen file was deleted on negative saving' );
+
+			// Case 3: Decimal formatting precision
+			$this->assert( '0 B' === SizeGuard::format_size( 0 ), 'format_size(0) returns 0 B' );
+			$this->assert( '500 B' === SizeGuard::format_size( 500 ), 'format_size(500) returns 500 B without decimals' );
+			$formattedKb = SizeGuard::format_size( 50000, 1 ); // ~48.8 KB
+			$this->assert( str_contains( $formattedKb, 'KB' ) && ( str_contains( $formattedKb, '.' ) || str_contains( $formattedKb, ',' ) ), 'format_size(50000) includes decimal point/comma' );
+			$formattedMb = SizeGuard::format_size( 2500000, 1 ); // ~2.4 MB
+			$this->assert( str_contains( $formattedMb, 'MB' ) && ( str_contains( $formattedMb, '.' ) || str_contains( $formattedMb, ',' ) ), 'format_size(2500000) includes decimal point/comma' );
 
 			@unlink( $tmpFile );
 		}

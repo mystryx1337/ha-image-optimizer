@@ -14,6 +14,7 @@ use ha\ImageOptimizer\Bulk\ProgressTracker;
 use ha\ImageOptimizer\Common\Settings;
 use ha\ImageOptimizer\Media\CustomFolderProcessor;
 use ha\ImageOptimizer\Auditor\MediaAuditor;
+use ha\ImageOptimizer\Engine\SizeGuard;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -152,7 +153,7 @@ class AjaxHandler {
 				'optimized_images' => $stats['optimized_images'],
 				'unoptimized'      => $stats['unoptimized'],
 				'saved_bytes'      => $stats['saved_bytes'],
-				'saved_human'      => size_format( $stats['saved_bytes'] ),
+				'saved_human'      => SizeGuard::format_size( $stats['saved_bytes'], 1 ),
 				'saved_percent'    => $stats['saved_percent'],
 			],
 			'custom_stats' => [
@@ -160,7 +161,7 @@ class AjaxHandler {
 				'optimized_images' => $custom_stats['optimized_images'],
 				'unoptimized'      => $custom_stats['unoptimized'],
 				'saved_bytes'      => $custom_stats['saved_bytes'],
-				'saved_human'      => size_format( $custom_stats['saved_bytes'] ),
+				'saved_human'      => SizeGuard::format_size( $custom_stats['saved_bytes'], 1 ),
 				'saved_percent'    => $custom_stats['saved_percent'],
 			],
 		] );

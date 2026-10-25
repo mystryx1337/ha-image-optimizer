@@ -88,4 +88,22 @@ class SizeGuard {
 		$saved = $original_bytes - $new_bytes;
 		return round( ( $saved / $original_bytes ) * 100, 2 );
 	}
+
+	/**
+	 * Format byte count into human-readable string with decimal precision.
+	 * Guarantees at least 1 decimal place for KB, MB, GB so values like
+	 * 2.3 MB -> 2.1 MB are never collapsed to "2 MB -> 2 MB".
+	 *
+	 * @param int $bytes Size in bytes.
+	 * @param int $decimals Minimum decimal places (default: 1).
+	 * @return string Human-readable size string (e.g. "2,4 MB", "48,5 KB").
+	 */
+	public static function format_size( int $bytes, int $decimals = 1 ): string {
+		$bytes = max( 0, $bytes );
+		if ( $bytes < 1024 ) {
+			return (string) size_format( $bytes, 0 );
+		}
+
+		return (string) size_format( $bytes, $decimals );
+	}
 }
